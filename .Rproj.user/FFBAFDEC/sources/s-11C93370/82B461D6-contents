@@ -300,7 +300,7 @@ name5 <- c("Argentina","Switzerland","Chile","Indonesia","India","Japan","Korea"
 name6 <- c("AR","CH","CL","ID","IN","JP","KR","MX","MY","TH","US")
 
 name5 <- c(name5,"date")
-name6 <- c(name6,"date")
+name6 <- c(name6,"date")03
 ## Combined and separate file for each countries
 ### Combine data for 70 onward
 ### 1985 onward

@@ -47,6 +47,8 @@ df <- merge(df1, df2, by=c("id","date"), all=TRUE)
 library(pglm)
 model1 <- pglm(crisis ~ credit_gap, df, family = "binomial",
                            model = "random", method = "bfgs")
+summary(model1)
+
 
     # View(df)
     # df <- merge(df2, df3, by=c("ID","date"), all.x=TRUE)

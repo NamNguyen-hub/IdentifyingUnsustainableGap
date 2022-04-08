@@ -24,12 +24,15 @@ df2 <- read.table("../data/Input/crisis_h4.csv", header=TRUE, sep=",")
     # df5 <- read.table("GDP_gap.txt", header=TRUE, sep=",")
     # df6 <- read.table("HP_inc_gap.txt", header=TRUE, sep=",")
 df2$date <- as.Date(df2$date)
-names2 <- names(df2)
-names2
+#names2 <- names(df2)
+#names2=sort(names2[-which(names2 == "date")])
+
+#write.table(names2, "../Data/processed/countrylist.txt", sep=',', row.names=FALSE)
+
 ## Limit df1 year and countries here
 Reduce(intersect, list(names(df1),names(df2)))
 df1 = subset(df1, date>= as.Date(startdate) & date<=as.Date(enddate)) 
-df1 <- df1[names2]
+#df1 <- df1[names2]
 
 
 df1 <- melt(df1, id=c("date"))

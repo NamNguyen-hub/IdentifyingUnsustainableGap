@@ -18,8 +18,6 @@ library(data.table)
 library(xts)
 library(tsbox)
 library(rio)
-#library(lubridate)
-library(zoo)
 
 # create a temporary directory
 td <- tempdir()
@@ -136,32 +134,26 @@ names(df3)
 ## Output data into data folder
 
 
-for (q in 1:12)
-{
 ## Crisis data
 #Import European data #2021:DEC (quarter level data)
 # https://www.esrb.europa.eu/pub/financial-crises/html/index.en.html
 # https://www.esrb.europa.eu/pub/fcdb/esrb.fcdb20220120.en.xlsx
 
 
-#rm(td)
-#rm(tf)
+rm(td)
+rm(tf)
 # create a temporary directory
-#td <- tempdir()
+td <- tempdir()
 # create a temporary file
-#tf <- tempfile(tmpdir=td, fileext=".xlsx")
+tf <- tempfile(tmpdir=td, fileext=".xlsx")
 # download file from internet into temporary location
-#download.file("https://www.esrb.europa.eu/pub/fcdb/esrb.fcdb20220120.en.xlsx", tf)
+download.file("https://www.esrb.europa.eu/pub/fcdb/esrb.fcdb20220120.en.xlsx", tf)
 # list zip archive
 #file_names <- unzip(tf, list=TRUE)
 # extract files from zip file
 #unzip(tf, exdir=td, overwrite=TRUE)
 # use when zip file has only one file
-library(readxl)
-tf <- "../Data/Input/esrb.fcdb20220120.en.xlsx"
-data <-read_excel(tf, sheet="Systemic crises")
-
-#data <- rio::import(tf)
+data <- import(tf)
 data <- data[-c(1, (nrow(data)-3):nrow(data)),-c(5:ncol(data))]
 names(data)[3]<-"Start_date"
 names(data)[4]<-"End_date"
@@ -207,18 +199,11 @@ m$date <- as.Date(m$date)
 
 ## For loop to loop through all countries
 
-##ym <- yearmon(2006) + 0:11/12   # months in 2006
-##ym + 0.25 # one year later
-
 ### 1st event
 for (i in 1:nrow(data)){
   ai = data$Country[i]
   for (j in 1:132){
-    for(y in 1:12) {
-      if((as.yearqtr(m[["date"]][j])+y/4) == (as.yearqtr(data[["startdate"]][i]))) {m[[ai]][j]=NA}
-    }
-    if((as.yearqtr(m[["date"]][j])+q/4) == (as.yearqtr(data[["startdate"]][i]))){m[[ai]][j]=1}
-    if(m[["date"]][j] >= data[["startdate"]][i] && m[["date"]][j] <= data[["enddate"]][i]) {m[[ai]][j]=NA}
+    if(m[["date"]][j] >= data[["startdate"]][i] && m[["date"]][j] <= data[["enddate"]][i]) {m[[ai]][j]=1}
   }
 }
 
@@ -302,12 +287,8 @@ m$date <- as.Date(m$date)
 for (i in 1:nrow(data)){
   ai = data$Country[i]
   for (j in 1:132){
-    for(y in 1:12) {
-      if((as.yearqtr(m[["date"]][j])+y/4) == (as.yearqtr(data[["Start"]][i]))) {m[[ai]][j]=NA}
-    }
-    if((as.yearqtr(m[["date"]][j])+q/4) == (as.yearqtr(data[["Start"]][i]))) {m[[ai]][j]=1}
-    if(m[["date"]][j] >= data[["Start"]][i] && m[["date"]][j] <= data[["End"]][i]) {m[[ai]][j]=NA}
-    }
+    if(m[["date"]][j] >= data[["Start"]][i] && m[["date"]][j] <= data[["End"]][i]) {m[[ai]][j]=1}
+  }
 }
 
 
@@ -319,7 +300,7 @@ name5 <- c("Argentina","Switzerland","Chile","Indonesia","India","Japan","Korea"
 name6 <- c("AR","CH","CL","ID","IN","JP","KR","MX","MY","TH","US")
 
 name5 <- c(name5,"date")
-name6 <- c(name6,"date")
+name6 <- c(name6,"date")03
 ## Combined and separate file for each countries
 ### Combine data for 70 onward
 ### 1985 onward
@@ -328,32 +309,20 @@ m2 <- m
 names(m2) <- name6
 
 m <- merge(m1, m2, by="date")
-#m <- c(m, as.data.frame(matrix(0,nrow(m),3)))
-m <- as.data.frame(m)
-
-#names(m)[(length(m)-2):length(m)] <- c("AU","ZA","CA")
+m <- c(m, rep(0,nrow(m),3))
+names(m)[(length(m)-2):length(m)] <- c("AU","ZA","CA")
 
 
 ### Export data
 
-
+df2 <- subset(df2,select=-GR)
+df3 <- subset(df3,select=-GR)
 m <- as.data.frame(m)
-m <- subset(m,select=-c(GR))
-m$date <- as.Date(m$date)
-
-filepath=sprintf("../Data/input/crisis_h%s.csv",q)
-write.table(m, filepath, sep=',', row.names=FALSE)
-}
-
-df2 <- subset(df2,select=-c(GR,AU,ZA,CA,HK,NZ,SG))
-df3 <- subset(df3,select=-c(GR,AU,ZA,CA,HK,NZ,SG))
+m <- subset(m,select=-GR)
 
 write.table(df2, "../Data/input/credit.csv", sep=',', row.names=FALSE)
-
-
 write.table(df3, "../Data/input/credit_gap.csv", sep=',', row.names=FALSE)
-
-
+write.table(m, "../Data/input/crisis.csv", sep=',', row.names=FALSE)
 
 
 ## Will have to remove Greece because of ongoing crisis -> 28 countries in final sample

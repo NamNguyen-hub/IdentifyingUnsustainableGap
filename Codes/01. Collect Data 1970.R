@@ -1,0 +1,400 @@
+# Collect Data
+
+## Set up
+rm(list=ls())
+
+#1. Parameter Setup
+#https://www.bis.org/statistics/full_data_sets.htm
+
+#----
+
+# Libraries
+library(dplyr)
+library(ggplot2)
+library(zoo)
+#library(reshape2)
+library(rstudioapi)
+library(data.table)
+library(xts)
+library(tsbox)
+library(rio)
+library(stringr)
+
+# create a temporary directory
+td <- tempdir()
+# create a temporary file
+tf <- tempfile(tmpdir=td, fileext=".zip")
+# download file from internet into temporary location
+download.file("https://www.bis.org/statistics/full_credit_gap_csv.zip", tf)
+# list zip archive
+file_names <- unzip(tf, list=TRUE)
+# extract files from zip file
+unzip(tf, exdir=td, overwrite=TRUE)
+# use when zip file has only one file
+data <- import(file.path(td, file_names$Name[1]))
+# use when zip file has multiple files
+#data_multiple <- lapply(file_names$Name, function(x) import(file.path(td, x)))
+# delete the files and directories
+rm(td)
+rm(tf)
+
+setwd(dirname(getActiveDocumentContext()$path))
+
+latest_date = file_names$Date[1]
+
+### filter reference: https://dplyr.tidyverse.org/reference/filter.html\
+#filter(  optionA, 
+#         optionB, 
+#         optionC %in% c("a","b")) 
+#             is also available
+
+## Process data
+rates_plot2 <- data %>%
+  filter(.data[["Credit gap data type"]] == "A:Credit-to-GDP ratios (actual data)")
+  #filter(grepl(clist2, BORROWERS_CTY))%>%
+
+rates_plot3 <- data %>%
+  filter(.data[["Credit gap data type"]] == "C:Credit-to-GDP gaps (actual-trend)")
+#filter(grepl(clist2, BORROWERS_CTY))%>%
+
+t_rates_plot2 <- transpose(rates_plot2)
+
+# get row and colnames in order
+colnames(t_rates_plot2) <- rownames(rates_plot2)
+rownames(t_rates_plot2) <- colnames(rates_plot2)
+colnames(t_rates_plot2) <- t_rates_plot2[2,] # changes col names to country id
+#t_rates_plot2 <- t_rates_plot2[-c(1:2,4:11),]
+t_rates_plot2 <- t_rates_plot2[-c(1:7),] # Removing other naming scheme rows
+t_rates_plot2$date <- rownames(t_rates_plot2) #extract rownames -> column for date
+
+dim(t_rates_plot2)
+#t_rates_plot2 <- na.omit(t_rates_plot2)
+#dim(t_rates_plot2)
+
+
+## Gap data
+# get row and colnames in order
+t_rates_plot3 <- transpose(rates_plot3)
+
+colnames(t_rates_plot3) <- rownames(rates_plot3)
+rownames(t_rates_plot3) <- colnames(rates_plot3)
+colnames(t_rates_plot3) <- t_rates_plot3[2,] # changes col names to country id
+#t_rates_plot3 <- t_rates_plot3[-c(1:2,4:11),]
+t_rates_plot3 <- t_rates_plot3[-c(1:7),]
+t_rates_plot3$date <- rownames(t_rates_plot3)
+df3 <- t_rates_plot3
+
+df3$date <- as.Date(as.yearqtr(df3$date,           # Convert dates to quarterly
+                              format = "%Y-Q%q"))
+
+
+### data type transforming
+df <- t_rates_plot2
+
+df$date <- as.Date(as.yearqtr(df$date,           # Convert dates to quarterly
+                              format = "%Y-Q%q"))
+#df <- xts(df, order.by=df$date)
+#df <- ts_ts(df)
+
+## Filter out countries with data available from 1970:Q1 
+df1 = subset(df, date >= as.Date('1970-01-01')) 
+clist1 <- names(which(colSums(is.na(df1))>0))
+#df1 <- select(df1,-clist1) # 21 countries remains (CA,AU,ZA does not have systemic crisis)
+clist1 <- colnames(df1)
+#clist1 <- clist1[-c(which(clist1=="ZA:South Africa"))]
+df1 <- df[,clist1]
+
+
+name11<- str_sub(names(df1[-ncol(df1)]), end=2)
+name21<- str_sub(names(df1[-ncol(df1)]), start=4) 
+
+name11<- c(name11,"date")
+
+## Remove south-africa from calculation since no crisis data is available from ZA
+
+
+## Filter out countries from 1970:Q1 onward
+df$date <- as.Date(df$date)
+#df2 = subset(df, date >= as.Date('1970-01-01')) 
+df2 <- df
+clist2 <- names(which(colSums(is.na(df2))>0))
+#df2 <- select(df2,-clist2) 
+#clist2 <- colnames(df2)
+#clist2 <- clist1[-c(which(clist2=="ZA:South Africa"))]
+#df2 <- df2[,clist2] # 20 countries
+names(df2)
+
+
+name1<- str_sub(names(df2[-ncol(df2)]), end=2)
+name2<- str_sub(names(df2[-ncol(df2)]), start=4)
+
+
+colnames(df2) <- c(name1,"date")
+colnames(df2)[which(names(df2)=="GB")] <- "UK"
+name1 <- colnames(df2)
+## Gap data
+
+# df3 <- df3[,c(clist2)] # 33 countries
+# names(df3) <- c(name1,"date")
+# colnames(df3)[which(names(df3)=="GB")] <- "UK"
+# name1 <- names(df2)
+# names(df3)
+
+
+## Output data into data folder
+q=1
+
+for (q in 1:12)
+{
+  ## Crisis data
+  #Import European data #2021:DEC (quarter level data)
+  # https://www.esrb.europa.eu/pub/financial-crises/html/index.en.html
+  # https://www.esrb.europa.eu/pub/fcdb/esrb.fcdb20220120.en.xlsx
+  
+  
+  #rm(td)
+  #rm(tf)
+  # create a temporary directory
+  #td <- tempdir()
+  # create a temporary file
+  #tf <- tempfile(tmpdir=td, fileext=".xlsx")
+  # download file from internet into temporary location
+  #download.file("https://www.esrb.europa.eu/pub/fcdb/esrb.fcdb20220120.en.xlsx", tf)
+  # list zip archive
+  #file_names <- unzip(tf, list=TRUE)
+  # extract files from zip file
+  #unzip(tf, exdir=td, overwrite=TRUE)
+  # use when zip file has only one file
+  library(readxl)
+  tf <- "../Data/Input/esrb.fcdb20220120.en.xlsx"
+  data <-read_excel(tf, sheet="Systemic crises")
+  
+  #data <- rio::import(tf)
+  data <- data[-c(1, (nrow(data)-3):nrow(data)),-c(5:ncol(data))]
+  names(data)[3]<-"Start_date"
+  names(data)[4]<-"End_date"
+  
+  data$Start_date <- as.Date(as.yearmon(data$Start_date,           # Convert dates to monthly
+                                        format = "%Y-%m"))
+  data$End_date <- as.Date(as.yearmon(data$End_date,           # Convert dates to monthly
+                                      format = "%Y-%m"))
+  
+  lubridate::quarter(data$Start_date) -> data$Start_quarter
+  lubridate::year(data$Start_date) -> data$Start_year
+  data$startdate <- paste(data$Start_year, data$Start_quarter, sep="-Q")
+  data$startdate <- as.Date(as.yearqtr(data$startdate,           # Convert dates to quarterly
+                                       format = "%Y-Q%q"))
+  
+  lubridate::quarter(data$End_date) -> data$End_quarter
+  lubridate::year(data$End_date) -> data$End_year
+  data$enddate <- paste(data$End_year, data$End_quarter, sep="-Q")
+  data$enddate <- as.Date(as.yearqtr(data$enddate,           # Convert dates to quarterly
+                                     format = "%Y-Q%q"))
+  data <- data[c("Country","Event","startdate","enddate")]
+  
+  # data1 <- data %>%
+  #     filter(Event == 1)
+  # 
+  # data2 <- data %>%
+  #   filter(Event == 2)
+  # 
+  # data3 <- data %>%
+  #   filter(Event == 3)
+  
+  a<-table(data$Country)
+  a <- as.data.frame(a)[,1]
+  a <- as.character(a)
+  ## Create a data frame of time series
+  ### Assign 1st row to be country names
+  ### Length of data -> 1985:Q1->2017:Q4 132 qtrs (33 yrs) x 28 countries
+  m <- as.data.frame(matrix(0, ncol=28, nrow =132))
+  names(m) <- a
+  V <- seq(as.Date("1985-01-01"), as.Date("2017-12-31"), by="quarters")
+  m$date <- V
+  m$date <- as.Date(m$date)
+  
+  ## For loop to loop through all countries
+  
+  ##ym <- yearmon(2006) + 0:11/12   # months in 2006
+  ##ym + 0.25 # one year later
+  
+  ### 1st event
+  for (i in 1:nrow(data)){
+    ai = data$Country[i]
+    for (j in 1:132){
+      for(y in 1:12) {
+        if((as.yearqtr(m[["date"]][j])+y/4) == (as.yearqtr(data[["startdate"]][i]))) {m[[ai]][j]=NA}
+      }
+      if((as.yearqtr(m[["date"]][j])+q/4) == (as.yearqtr(data[["startdate"]][i]))){m[[ai]][j]=1}
+      if(m[["date"]][j] >= data[["startdate"]][i] && m[["date"]][j] <= data[["enddate"]][i]) {m[[ai]][j]=NA}
+    }
+  }
+  
+  m1 <- m
+  
+  name3 <- names(m)
+  #name3 <- c(Reduce(intersect, list(name1,name3))) ## 11 countries
+  
+  #m1<-m1[name3]
+  # 
+  # ### 2nd event
+  # a<-table(data2$Country)
+  # a <- as.data.frame(a)[,1]
+  # a <- as.character(a)
+  # 
+  # rownames(data2) = data2$Country
+  # 
+  # for (i in 1:length(a)){
+  #   ai = a[i]
+  #   for (j in 1:132){
+  #     if(m[["date"]][j] >= data2[["startdate"]][i] && m[["date"]][j] <= data2[["enddate"]][i]) {m[[ai]][j]=1}
+  #   }
+  # }
+  # 
+  # ### 3rd event
+  # a<-table(data3$Country)
+  # a <- as.data.frame(a)[,1]
+  # a <- as.character(a)
+  # 
+  # rownames(data3) = data3$Country
+  # 
+  # for (i in 1:length(a)){
+  #   ai = a[i]
+  #   for (j in 1:132){
+  #     if(m[["date"]][j] >= data3[["startdate"]][i] && m[["date"]][j] <= data3[["enddate"]][i]) {m[[ai]][j]=1}
+  #   }
+  # }
+  
+  # use when zip file has multiple files
+  #data_multiple <- lapply(file_names$Name, function(x) import(file.path(td, x)))
+  # delete the files and directories
+  rm(td)
+  rm(tf)
+  
+  
+  
+  #Import IMF data #2017:Q4 (annual crisis)
+  #https://www.imf.org/en/Publications/WP/Issues/2018/09/14/Systemic-Banking-Crises-Revisited-46232
+  # https://www.imf.org/-/media/Files/Publications/WP/2018/datasets/wp18206.ashx
+  
+  library(readxl)
+  tf <- "../Data/Input/SYSTEMIC BANKING CRISES DATABASE_2018.xlsx"
+  data <-read_excel(tf, sheet="Crisis Resolution and Outcomes")
+  
+  ## Combine crisis data 
+  ### with priority data overwrite given to European , more minutes data available to quarter level
+  library(stringr)
+  
+  data[grepl('/', data$Country), ]$Country <- str_sub(data[grepl('/', data$Country), ]$Country, end=-4)
+  data[grepl('/', data$End), ]$End <- str_sub(data[grepl('/', data$End), ]$End, end=-4)
+  data = data[-nrow(data), -c(4:11)]
+  
+  a<-as.character(as.data.frame(table(data$Country))[,1])
+  
+  
+  data$Start <- paste(data$Start, "-Q1", sep='')
+  data$End <- paste(data$End, "-Q4", sep='')
+  data$Start <- as.Date(as.yearqtr(data$Start,           # Convert dates to quarterly
+                                   format = "%Y-Q%q"))
+  data$End <- as.Date(as.yearqtr(data$End,           # Convert dates to quarterly
+                                 format = "%Y-Q%q"))
+  data <- na.omit(data)
+  
+  m <- as.data.frame(matrix(0, ncol=118, nrow =132))
+  names(m) <- a
+  
+  V <- seq(as.Date("1985-01-01"), as.Date("2017-12-31"), by="quarters")
+  m$date <- V
+  m$date <- as.Date(m$date)
+  
+  for (i in 1:nrow(data)){
+    ai = data$Country[i]
+    for (j in 1:132){
+      for(y in 1:12) {
+        if((as.yearqtr(m[["date"]][j])+y/4) == (as.yearqtr(data[["Start"]][i]))) {m[[ai]][j]=NA}
+      }
+      if((as.yearqtr(m[["date"]][j])+q/4) == (as.yearqtr(data[["Start"]][i]))) {m[[ai]][j]=1}
+      if(m[["date"]][j] >= data[["Start"]][i] && m[["date"]][j] <= data[["End"]][i]) {m[[ai]][j]=NA}
+    }
+  }
+  
+  m2<-m
+
+  names(m2)[which(names(m2)=="China, Mainland")] = "China"
+  name4 <- names(m2)
+  m2 <- cbind(m2,matrix(0,nrow(m2),6))
+  
+  name42 <- c(name4,"Australia","Canada","South Africa", "Hong Kong SAR", "Saudi Arabia", "Singapore")
+  names(m2) <- name42
+  # Israel have crisis before 1985
+  ## Include Israel in analysis/ not sure why drehmann droppe it 
+  # Philippines credit data have been removed from BIS
+  
+name43<-sort(Reduce(intersect, list(name2,name42))) #27 - AT, BE, DE, DK , ES, FI, FR, UK, GR, HU, IE, IT, NL, NO, PT, SE (= 11 SW switzerland included in second data)
+  # Drop Luxembourg from crisis (small economy, imported crisis)
+name43<-name43[-which(name43=="Luxembourg")]
+  # Use credit names to convert to abbreviation 2 letters
+
+m2<-m2[c(name43,"date")]
+
+name44 = rep("",length(name43))
+for (i in 1:length(name43)){
+  name44[i]=name1[which(name2==name43[i])]
+}
+
+names(m2)<-c(name44,"date")
+  
+name51<-Reduce(intersect,(list(name3,name1))) ## EU crisis and credit
+name52 <-Reduce(intersect,(list(name51,name44))) ## EU crisis and LV crisis
+
+for (i in 1:length(name52)){
+  name44<-name44[-which(name44==name52[i])]
+}
+
+
+  ## Combined and separate file for each countries
+  ### Combine data for 70 onward
+  ### 1985 onward
+  m1 <- m1[name51] # EU crisis and credit
+  m2 <- m2[name44] # not EU crisis, LV crisis and credit
+
+  m <- cbind(m1, m2)
+  name_m<-sort(names(m)[-which(names(m)=="date")])
+  name_m<-c(name_m,"date")
+  m<-m[name_m]
+  #m <- c(m, as.data.frame(matrix(0,nrow(m),3)))
+  #m <- as.data.frame(m)
+  
+  ### Export data
+  
+  m <- as.data.frame(m)
+  m$date <- as.Date(m$date)
+  
+  filepath=sprintf("../Data/input/crisis_h%s.csv",q)
+  write.table(m, filepath, sep=',', row.names=FALSE)
+}
+
+#df2 <- subset(df2,select=-c(GR,AU,ZA,CA,HK,NZ,SG))
+#df3 <- subset(df3,select=-c(GR,AU,ZA,CA,HK,NZ,SG))
+
+
+df2$AR[which(df2$AR==max(as.numeric(na.omit(df2$AR))))]<-35.5 #fix anomaly in data
+#summary(as.numeric(na.omit(df2$AR)))
+write.table(df2, "../Data/input/credit_fullsample.csv", sep=',', row.names=FALSE)
+#write.table(df, "../Data/input/credit_fullsample.csv", sep=',', row.names=FALSE)
+
+df22<- read.csv("../Data/input/credit70.csv")
+summary(df22)
+#write.table(df3, "../Data/input/credit_gap.csv", sep=',', row.names=FALSE)
+
+
+
+
+## Will have to remove Greece because of ongoing crisis -> 28 countries in final sample
+## 20 countries in beginning sample 1970:Q1 forward for credit data 
+#-> generate credit cycle component from 1985:Q1 onward
+#-> generate credit cycle from 2000:Q1 onward
+
+
+## Next step
+### panel logistic regression

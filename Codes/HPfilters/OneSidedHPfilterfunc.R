@@ -38,20 +38,20 @@ filterHP <- function(series,lambda=1600){
   cycle <- series - trend
   
   # Plot the data ---
-  par(mfrow = c(2,1),
-      oma = c(1,3,0,0) + 0.1,
-      mar = c(1.5,1,1,1) + 0.1)
-  plot(series,las=1,col="black")
-  lines(trend,col="blue")
-  legend("topleft",legend=c("Observed","Trend"),border=FALSE,bty="n",col=c("black","blue"),lwd=1)
-  title(main="HP Filter - Trend")
-  par(mar = c(1,1,1.5,1) + 0.1)
-  plot(cycle,las=1,col="red")
-  title(main="HP Filter - Cycle")
-  abline(h=0)
-  par(mfrow = c(1,1),
-      oma = c(0,0,0,0),
-      mar = c(5.1,4.1,4.1,2.1))  
+  # par(mfrow = c(2,1),
+  #     oma = c(1,3,0,0) + 0.1,
+  #     mar = c(1.5,1,1,1) + 0.1)
+  # plot(series,las=1,col="black")
+  # lines(trend,col="blue")
+  # legend("topleft",legend=c("Observed","Trend"),border=FALSE,bty="n",col=c("black","blue"),lwd=1)
+  # title(main="HP Filter - Trend")
+  # par(mar = c(1,1,1.5,1) + 0.1)
+  # plot(cycle,las=1,col="red")
+  # title(main="HP Filter - Cycle")
+  # abline(h=0)
+  # par(mfrow = c(1,1),
+  #     oma = c(0,0,0,0),
+  #     mar = c(5.1,4.1,4.1,2.1))  
   
   # Return the data
   data <- ts.union(series,trend,cycle)

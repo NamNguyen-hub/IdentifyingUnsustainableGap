@@ -25,7 +25,7 @@ filterSTM <- function(series){
   }
   
   # MLE Estimation
-  MLE       <- dlmMLE(series,c(0.5,0.4),model)
+  MLE       <- dlmMLE(series,c(0,0),model)
   # Estimated parameters
   EstParams <- model(MLE$par)
   # # Smoothed series
@@ -36,7 +36,7 @@ filterSTM <- function(series){
   # Trend and Cycle
   trend <- Smooth_Estimates$m[,1]
   cycle <- series - trend
-  
+
   # Plot the data ---
   # par(mfrow = c(2,1),
   #     oma = c(1,3,0,0) + 0.1,
@@ -55,5 +55,6 @@ filterSTM <- function(series){
   
   # Return the data
   data <- ts.union(series,trend,cycle)
+  data <- ts(data[-1,])
   return(data)
 }

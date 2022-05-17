@@ -39,7 +39,7 @@ enddate ='2017-10-01'
 filepath = "../Data/input/credit_fullsample.csv"
 df0 <- read.csv(filepath, header=TRUE, sep=",")
 df0$date <- as.Date(df0$date)
-dropList <- c("IE","LU","NZ","XM")
+dropList <- c("IE","LU","NZ","XM") #Drehmann 2021 data set
 df0<-df0 <- df0[, !colnames(df0) %in% dropList] 
 
 
@@ -113,6 +113,8 @@ for(i in 2:length(countrylist)){
 }
 
 
+## Create 1 sided data
+
 df<-as.data.frame(df)
 hamilton_13 <- plm(credit ~ creditL13 + creditL14 + creditL15 + creditL16,
           data = df, index = c("ID","date"), model = "within", effect="individual")
@@ -156,11 +158,15 @@ df.h28 <- cbind(df.h28,hamilton_28$residuals)
 names(df.h28)[length(names(df.h28))] <- "c.hamilton28_panel"
 df.h28<-df.h28[c("ID","date","c.hamilton28_panel")]
 
-
+library(lubridate)
 ## Merge all 4 data frames
-df2 <- merge(df.h13, df.h20, by=c("ID","date"), all=TRUE)
-df2 <- merge(df2, df.h24, by=c("ID","date"), all=TRUE)
-df2 <- merge(df2, df.h28, by=c("ID","date"), all=TRUE)
+df2 <- merge(df.h13, df.h20, by=c("ID","date"), all.x=TRUE)
+df2 <- merge(df2, df.h24, by=c("ID","date"), all.x=TRUE)
+df2 <- merge(df2, df.h28, by=c("ID","date"), all.x=TRUE)
+df2$date<-as.Date(df2$date)
+df2<-df2 %>%
+  arrange(ymd(df2$date)) %>%
+  arrange(df2$ID)
 
 filepath = sprintf('../Data/Processed/GeneratedCycles_hamiltonpanel.csv')
 write.table(df2, filepath, sep=',' , row.names = FALSE)

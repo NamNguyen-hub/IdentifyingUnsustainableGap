@@ -16,16 +16,16 @@ filterHP <- function(series,lambda=1600){
                         C0 = 2 * diag(2))
     
     # AR(2) model
-    cycle <- dlmModARMA(ar     = ARtransPars(c(0,0)),
-                        sigma2 = 1e-07)      
+    #cycle <- dlmModARMA(ar     = ARtransPars(c(0,0)),
+    #                    sigma2 = 1e-07)      
     
-    hp_filter_dlm <- trend  + cycle
+    hp_filter_dlm <- trend  #+ cycle
     
     return(hp_filter_dlm)
   }
   
   # MLE Estimation
-  MLE       <- dlmMLE(series,c(0.5,0.4),model)
+  MLE       <- dlmMLE(series,c(0,0),model)
   # Estimated parameters
   EstParams <- model(MLE$par)
   # # Smoothed series
@@ -34,9 +34,10 @@ filterHP <- function(series,lambda=1600){
   Smooth_Estimates = dlmFilter(series,EstParams)
   
   # Trend and Cycle
+  #trend <- Smooth_Estimates$m[-nrow(Smooth_Estimates$m),1]
   trend <- Smooth_Estimates$m[,1]
   cycle <- series - trend
-  
+
   # Plot the data ---
   # par(mfrow = c(2,1),
   #     oma = c(1,3,0,0) + 0.1,
@@ -55,5 +56,6 @@ filterHP <- function(series,lambda=1600){
   
   # Return the data
   data <- ts.union(series,trend,cycle)
+  data <- ts(data[-1,])
   return(data)
 }

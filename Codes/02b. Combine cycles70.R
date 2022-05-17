@@ -89,6 +89,11 @@ y=nrow(df1)
   c.bn2=rep(0,t)
   c.bn3=rep(0,t)
   c.bn4=rep(0,t)
+  c.bn5=rep(0,t)
+  c.bn6=rep(0,t)
+  c.bn7=rep(0,t)
+  c.bn8=rep(0,t)
+  
   c.hamilton28t1=rep(0,t)
   c.hamilton24t1=rep(0,t)
   c.hamilton20t1=rep(0,t)
@@ -146,6 +151,22 @@ for(i in 1:t){
     bn.decomp <- bnd(credit, nlag = 4) # Beveridge-Nelson decomposition
     c.bn <- ts(bn.decomp[, 2])
     c.bn4[1+i-1]=c.bn[i+burn]
+    
+    bn.decomp <- bnd(credit, nlag = 5) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn5[1+i-1]=c.bn[i+burn]
+    
+    bn.decomp <- bnd(credit, nlag = 6) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn6[1+i-1]=c.bn[i+burn]
+    
+    bn.decomp <- bnd(credit, nlag = 7) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn7[1+i-1]=c.bn[i+burn]
+    
+    bn.decomp <- bnd(credit, nlag = 8) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn8[1+i-1]=c.bn[i+burn]
 }
   
   c.ma1 = rep(0,t)
@@ -179,14 +200,14 @@ for(i in 1:t){
   x<- cbind(c.hp1,c.hp3k1,c.hp25k1,c.hp125k1,c.hp221k1,c.hp400k1,
             c.hamilton13t1, c.hamilton20t1, c.hamilton24t1, c.hamilton28t1,
             c.linear2,c.quad2,c.poly3,c.poly4,c.poly5,c.poly6,
-            c.bn2, c.bn3, c.bn4, c.stm1, c.ma1)
+            c.bn2, c.bn3, c.bn4, c.bn5, c.bn6, c.bn7, c.bn8, c.stm1, c.ma1)
   #append date column
   date<-subset(df1, date>=as.Date(as.yearqtr(startdate)+burn/4))
   date<-as.data.frame(date$date)
   names(date)<-"date"
   x<-cbind(date,x)
   x$date<-as.Date(x$date)
-  x<-subset(x, date>as.Date(as.yearqtr(startdate)+burn/4))
+  #x<-subset(x, date>as.Date(as.yearqtr(startdate)+burn/4))
   
   
   filepath = sprintf('../Data/Processed/GeneratedCycles_%s.csv',country)

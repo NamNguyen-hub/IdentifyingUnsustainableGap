@@ -86,6 +86,11 @@ c.bn110=rep(0,y)
 c.bn210=rep(0,y)
 c.bn310=rep(0,y)
 c.bn410=rep(0,y)
+c.bn510=rep(0,y)
+c.bn610=rep(0,y)
+c.bn710=rep(0,y)
+c.bn810=rep(0,y)
+
 c.hp10=rep(0,y)
 c.hp3k10=rep(0,y)
 c.hp25k10=rep(0,y)
@@ -115,11 +120,11 @@ c.hp221k=filterHP(credit, lambda=221000)[,"cycle"]
 c.hp400k=filterHP(credit, lambda=400000)[,"cycle"]
 #Save cycles value at the end of rolling sample periods
 c.hp10[j+r-1]=c.hp[r]
-c.hp3k10[j+r-1]=c.hp[r]
-c.hp25k10[j+r-1]=c.hp[r]
-c.hp125k10[j+r-1]=c.hp[r]
-c.hp221k10[j+r-1]=c.hp[r]
-c.hp400k10[j+r-1]=c.hp[r]
+c.hp3k10[j+r-1]=c.hp3k[r]
+c.hp25k10[j+r-1]=c.hp25k[r]
+c.hp125k10[j+r-1]=c.hp125k[r]
+c.hp221k10[j+r-1]=c.hp221k[r]
+c.hp400k10[j+r-1]=c.hp400k[r]
 
 credit_xts = ts_xts(credit)
     
@@ -170,6 +175,21 @@ credit_xts = ts_xts(credit)
     c.bn <- ts(bn.decomp[, 2])
     c.bn410[j+r-1]=c.bn[r]
 
+    bn.decomp <- bnd(credit, nlag = 5) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn510[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 6) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn610[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 7) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn710[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 8) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn810[j+r-1]=c.bn[r]
   
 
   q=16
@@ -190,10 +210,10 @@ credit_xts = ts_xts(credit)
 x<- cbind(c.hp10,c.hp3k10,c.hp25k10,c.hp125k10,c.hp221k10,c.hp400k10,
           c.hamilton13t10, c.hamilton20t10, c.hamilton24t10, c.hamilton28t10,
           c.linear10,c.quad10,c.poly310,c.poly410,c.poly510,c.poly610,
-          c.bn210, c.bn310, c.bn410, c.stm10, c.ma10)
+          c.bn210, c.bn310, c.bn410, c.bn510, c.bn610, c.bn710, c.bn810, c.stm10)
 x<- cbind(as.data.frame(df1$date), x)
 names(x)[1]<-"date"
-x<-subset(x, date>as.Date(as.yearqtr(startdate)+burn/4))
+x<-subset(x, date>=as.Date(as.yearqtr(startdate)+burn/4))
 
 ## Save data
 filepath = sprintf('../Data/Processed/GeneratedCycles_rolling10yrs_%s.csv',country)
@@ -234,6 +254,12 @@ for(i in 1:length(countrylist)){
   c.bn210=rep(0,y)
   c.bn310=rep(0,y)
   c.bn410=rep(0,y)
+  c.bn410=rep(0,y)
+  c.bn510=rep(0,y)
+  c.bn610=rep(0,y)
+  c.bn710=rep(0,y)
+  c.bn810=rep(0,y)
+  
   c.hp10=rep(0,y)
   c.hp3k10=rep(0,y)
   c.hp25k10=rep(0,y)
@@ -263,11 +289,11 @@ for(i in 1:length(countrylist)){
     c.hp400k=filterHP(credit, lambda=400000)[,"cycle"]
     #Save cycles value at the end of rolling sample periods
     c.hp10[j+r-1]=c.hp[r]
-    c.hp3k10[j+r-1]=c.hp[r]
-    c.hp25k10[j+r-1]=c.hp[r]
-    c.hp125k10[j+r-1]=c.hp[r]
-    c.hp221k10[j+r-1]=c.hp[r]
-    c.hp400k10[j+r-1]=c.hp[r]
+    c.hp3k10[j+r-1]=c.hp3k[r]
+    c.hp25k10[j+r-1]=c.hp25k[r]
+    c.hp125k10[j+r-1]=c.hp125k[r]
+    c.hp221k10[j+r-1]=c.hp221k[r]
+    c.hp400k10[j+r-1]=c.hp400k[r]
     
     credit_xts = ts_xts(credit)
     
@@ -318,6 +344,21 @@ for(i in 1:length(countrylist)){
     c.bn <- ts(bn.decomp[, 2])
     c.bn410[j+r-1]=c.bn[r]
     
+    bn.decomp <- bnd(credit, nlag = 5) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn510[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 6) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn610[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 7) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn710[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 8) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn810[j+r-1]=c.bn[r]
     
     
     q=16
@@ -338,16 +379,16 @@ for(i in 1:length(countrylist)){
   x<- cbind(c.hp10,c.hp3k10,c.hp25k10,c.hp125k10,c.hp221k10,c.hp400k10,
             c.hamilton13t10, c.hamilton20t10, c.hamilton24t10, c.hamilton28t10,
             c.linear10,c.quad10,c.poly310,c.poly410,c.poly510,c.poly610,
-            c.bn210, c.bn310, c.bn410, c.stm10, c.ma10)
+            c.bn210, c.bn310, c.bn410, c.bn510, c.bn610, c.bn710, c.bn810, c.stm10)
   
   x<- cbind(as.data.frame(df1$date), x)
   names(x)<-c("date",
               "c.hp15","c.hp3k15","c.hp25k15","c.hp125k15","c.hp221k15","c.hp400k15",
               "c.hamilton13t15","c.hamilton20t15","c.hamilton24t15","c.hamilton28t15",
               "c.linear15","c.quad15","c.poly315","c.poly415","c.poly515","c.poly615",
-              "c.bn215","c.bn315","c.bn415","c.stm15","c.ma15")
+              "c.bn215","c.bn315","c.bn415","c.bn515","c.bn615","c.bn715","c.bn815","c.stm15")
   
-  x<-subset(x, date>as.Date(as.yearqtr(startdate)+burn/4))
+  x<-subset(x, date>=as.Date(as.yearqtr(startdate)+burn/4))
   
   ## Save data
   filepath = sprintf('../Data/Processed/GeneratedCycles_rolling15yrs_%s.csv',country)
@@ -387,6 +428,11 @@ for(i in 1:length(countrylist)){
   c.bn210=rep(0,y)
   c.bn310=rep(0,y)
   c.bn410=rep(0,y)
+  c.bn510=rep(0,y)
+  c.bn610=rep(0,y)
+  c.bn710=rep(0,y)
+  c.bn810=rep(0,y)
+  
   c.hp10=rep(0,y)
   c.hp3k10=rep(0,y)
   c.hp25k10=rep(0,y)
@@ -416,11 +462,11 @@ for(i in 1:length(countrylist)){
     c.hp400k=filterHP(credit, lambda=400000)[,"cycle"]
     #Save cycles value at the end of rolling sample periods
     c.hp10[j+r-1]=c.hp[r]
-    c.hp3k10[j+r-1]=c.hp[r]
-    c.hp25k10[j+r-1]=c.hp[r]
-    c.hp125k10[j+r-1]=c.hp[r]
-    c.hp221k10[j+r-1]=c.hp[r]
-    c.hp400k10[j+r-1]=c.hp[r]
+    c.hp3k10[j+r-1]=c.hp3k[r]
+    c.hp25k10[j+r-1]=c.hp25k[r]
+    c.hp125k10[j+r-1]=c.hp125k[r]
+    c.hp221k10[j+r-1]=c.hp221k[r]
+    c.hp400k10[j+r-1]=c.hp400k[r]
     
     credit_xts = ts_xts(credit)
     
@@ -471,6 +517,21 @@ for(i in 1:length(countrylist)){
     c.bn <- ts(bn.decomp[, 2])
     c.bn410[j+r-1]=c.bn[r]
     
+    bn.decomp <- bnd(credit, nlag = 5) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn510[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 6) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn610[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 7) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn710[j+r-1]=c.bn[r]
+    
+    bn.decomp <- bnd(credit, nlag = 8) # Beveridge-Nelson decomposition
+    c.bn <- ts(bn.decomp[, 2])
+    c.bn810[j+r-1]=c.bn[r]
     
     
     q=16
@@ -491,14 +552,14 @@ for(i in 1:length(countrylist)){
   x<- cbind(c.hp10,c.hp3k10,c.hp25k10,c.hp125k10,c.hp221k10,c.hp400k10,
             c.hamilton13t10, c.hamilton20t10, c.hamilton24t10, c.hamilton28t10,
             c.linear10,c.quad10,c.poly310,c.poly410,c.poly510,c.poly610,
-            c.bn210, c.bn310, c.bn410, c.stm10, c.ma10)
+            c.bn210, c.bn310, c.bn410, c.bn510, c.bn610, c.bn710, c.bn810, c.stm10)
   
   x<- cbind(as.data.frame(df1$date), x)
   names(x)<-c("date",
               "c.hp20","c.hp3k20","c.hp25k20","c.hp125k20","c.hp221k20","c.hp400k20",
               "c.hamilton13t20","c.hamilton20t20","c.hamilton24t20","c.hamilton28t20",
               "c.linear20","c.quad20","c.poly320","c.poly420","c.poly520","c.poly620",
-              "c.bn220","c.bn320","c.bn420","c.stm20","c.ma20")
+              "c.bn220","c.bn320","c.bn420","c.bn520","c.bn620","c.bn720","c.bn820","c.stm20")
   
   x<-subset(x, date>=as.Date(as.yearqtr(startdate)+20))
   
@@ -507,16 +568,17 @@ for(i in 1:length(countrylist)){
   filepath = sprintf('../Data/Processed/GeneratedCycles_%s.csv',country)
   df3 <- read.csv(filepath, header=TRUE, sep=",")
   df3$date <- as.Date(df3$date)
+  df3<-df3[-which(names(df3)=="c.ma1")]
 ### Merge  15-20year or 60-80 quarter in full sample with rolling 20 years 
   df3<-df3%>%
-    subset(date>as.Date(as.yearqtr(startdate)+15)) %>%
+    subset(date>=as.Date(as.yearqtr(startdate)+15)) %>%
     subset(date<as.Date(as.yearqtr(startdate)+20))
   names(df3)<-c("date",
               "c.hp20","c.hp3k20","c.hp25k20","c.hp125k20","c.hp221k20","c.hp400k20",
               "c.hamilton13t20","c.hamilton20t20","c.hamilton24t20","c.hamilton28t20",
               "c.linear20","c.quad20","c.poly320","c.poly420","c.poly520","c.poly620",
-              "c.bn220","c.bn320","c.bn420","c.stm20","c.ma20")
-    
+              "c.bn220","c.bn320","c.bn420","c.bn520","c.bn620","c.bn720","c.bn820","c.stm20")
+  
   x= rbind(df3,x)
   
   ## Save data

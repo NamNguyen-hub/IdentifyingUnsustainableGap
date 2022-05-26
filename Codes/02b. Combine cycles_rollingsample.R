@@ -35,19 +35,19 @@ source("HPfilters/OneSidedHPfilterfunc.R")
 source("HPfilters/OneSidedSTMfilterfunc.R")
 
 
-# Window of sample data
-enddate ='2017-10-01'
-
-# Importing file
-
 filepath = "../Data/input/credit_fullsample.csv"
 df0 <- read.csv(filepath, header=TRUE, sep=",")
 df0$date <- as.Date(df0$date)
 
+# Window of sample data
+enddate =max(df0$date)
+crisisdatadate=as.Date('2017-10-01')
 
-df1 = subset(df0, date >= as.Date('1985-01-01')) 
+df1 = subset(df0, date >= as.Date(as.yearqtr(crisisdatadate)-18)) 
 dropList <- names(which(colSums(is.na(df1))>0))
-df0 <- df0[, !colnames(df0) %in% dropList] #drop countries without data before 1985
+dropList <- c(dropList,"XM")
+df0 <- df0[, !colnames(df0) %in% dropList] #drop countries without data before 2000
+#2017-(15burn+3yrprecrisis) window
 countrylist <- names(df0)
 countrylist <- countrylist[-which(countrylist == "date")]
 

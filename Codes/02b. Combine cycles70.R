@@ -16,7 +16,6 @@ library(dplyr)
 # devtools::install_github("KevinKotze/tsm")
 library(tsm)
 library(zoo)
-library(dplyr)
 
 ## 
 library(forecast)
@@ -35,21 +34,25 @@ source("HPfilters/OneSidedHPfilterfunc.R")
 source("HPfilters/OneSidedSTMfilterfunc.R")
 
 
-# Window of sample data
-enddate ='2017-10-01'
-
 # Importing file
 
 filepath = "../Data/input/credit_fullsample.csv"
 df0 <- read.csv(filepath, header=TRUE, sep=",")
 df0$date <- as.Date(df0$date)
 
+# Window of sample data
+enddate =max(df0$date)
+crisisdatadate=as.Date('2017-10-01')
 
-df1 = subset(df0, date >= as.Date('1985-01-01')) 
+df1 = subset(df0, date >= as.Date(as.yearqtr(crisisdatadate)-18)) 
 dropList <- names(which(colSums(is.na(df1))>0))
-df0 <- df0[, !colnames(df0) %in% dropList] #drop countries without data before 1985
+dropList <- c(dropList,"XM")
+df0 <- df0[, !colnames(df0) %in% dropList] #drop countries without data before 2000
+                                          #2017-(15burn+3yrprecrisis) window
 countrylist <- names(df0)
 countrylist <- countrylist[-which(countrylist == "date")]
+
+burn=15*4 #15 yrs|60 periods before created cycles are stored
 
 for(i in 1:length(countrylist)){
   country = countrylist[i]
@@ -73,7 +76,6 @@ c.hp400k=filterHP(credit1, lambda=400000)[,"cycle"]
 
 #x<-list(c.hp,c.hp3k,c.hp25k,c.hp125k,c.hp221k,c.hp400k)
 
-burn=15*4 #15 yrs|60 periods before created cycles are stored
 t=nrow(df1)-burn  
 y=nrow(df1)
 #! add check if t is positive - for countries with shorter than 15 periods
@@ -115,7 +117,7 @@ for(i in 1:t){
     # credit.bw <- bwfilter(credit1, drift=FALSE)  # Butterworth filter
     credit.linear <- tslm(credit ~ trend) # Linear trend decomp
     c.linear <- credit - fitted(credit.linear)
-    c.linear2[1+i-1]=c.linear[i]
+    c.linear2[1+i-1]=c.linear[i+burn]
     
     credit.quad <- tslm(credit ~ trend + I(trend^2)) # Quadratic trend decomp
     c.quad <- credit - fitted(credit.quad)

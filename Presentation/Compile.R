@@ -1,11 +1,9 @@
-
-
 library(rstudioapi)
 
 setwd(dirname(getActiveDocumentContext()$path))
 getwd()
 
-bookdown::render_book('index.Rmd', "bookdown::beamer_presentation2", new_session = T)
+#bookdown::render_book('index.Rmd', "bookdown::beamer_presentation2", new_session = T)
 
 
 
@@ -24,12 +22,12 @@ df<-read.csv(filepath, sep = ",", header=TRUE)
 #rownames(df) <- df[,1]
 name1<- df[,1]
 name1<- gsub("_", ".", name1)
-name1[which(name1=="c.hp400k1")]<-"BIS Basel gap"
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
 df[,1]<-name1
 
 #df<-df[,-1]
 df<-df[-c(27:nrow(df)),-c(10:ncol(df))]
-df<-df[-2,]
+#df<-df[-2,]
 
 #colnames(df) <- c("Median", "10pct", "90pct", "Median", "10pct", "90pct", "Median", "10pct", "90pct")
 
@@ -39,47 +37,48 @@ df<-df[-2,]
 
 #kbl(data.frame(x=rnorm(10), y=rnorm(10), x= rnorm(10)), digits = c(1, 4, 4))
 
-kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), caption ='Variable selection', escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
       , row.names = FALSE) %>%
   kable_paper("striped") %>%
   #add_header_above(c("Parameters" = 1, "VAR2" = 3, "VAR2 1-cross lag" = 3, "VAR2 2-cross lags" = 3)) %>%
   #footnote(general="UK Bayesian regression results") %>%
   kable_styling(latex_options="scale_down") %>%
-  column_spec(5, bold = TRUE) #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
-
-
-
-filepath='../Data/Output/Modelselection_512.csv'
-df<-read.csv(filepath, sep = ",", header=TRUE)
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  gsub(".centering", "", ., perl = TRUE)
+  
 # 
-# 
-# filepath='../Data/Output/052219_Thu_BIC_unrestricted/Modelselection_512 copy.csv'
+# filepath='../Data/Output/Modelselection_512.csv'
 # df<-read.csv(filepath, sep = ",", header=TRUE)
-
-#rownames(df) <- df[,1]
-name1<- df[,1]
-name1<- gsub("_", ".", name1)
-name1[which(name1=="c.hp400k1")]<-"BIS Basel gap"
-df[,1]<-name1
-
-#df<-df[,-1]
-
-df<-df[-c(13:17, 31:nrow(df)),-c(10:ncol(df))]
-#colnames(df) <- c("Median", "10pct", "90pct", "Median", "10pct", "90pct", "Median", "10pct", "90pct")
-
-#options(knitr.kable.NA = '')
-
-#df = df %>% mutate_if(is.numeric, format, digits=4)
-
-#kbl(data.frame(x=rnorm(10), y=rnorm(10), x= rnorm(10)), digits = c(1, 4, 4))
-
-kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), caption ='Variable selection', escape=FALSE, linesep=c("","", "", "", "\\addlinespace")) %>%
-  kable_paper("striped") %>%
-  #add_header_above(c("Parameters" = 1, "VAR2" = 3, "VAR2 1-cross lag" = 3, "VAR2 2-cross lags" = 3)) %>%
-  #footnote(general="UK Bayesian regression results") %>%
-  kable_styling(latex_options="scale_down") %>%
-  column_spec(6, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0)) 
-  row_spec(c(2,which(df$Cycle=="BIS Basel gap")), bold=TRUE)
+# # 
+# # 
+# # filepath='../Data/Output/052219_Thu_BIC_unrestricted/Modelselection_512 copy.csv'
+# # df<-read.csv(filepath, sep = ",", header=TRUE)
+# 
+# #rownames(df) <- df[,1]
+# name1<- df[,1]
+# name1<- gsub("_", ".", name1)
+# name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+# df[,1]<-name1
+# 
+# #df<-df[,-1]
+# 
+# df<-df[-c(13:17, 31:nrow(df)),-c(10:ncol(df))]
+# #colnames(df) <- c("Median", "10pct", "90pct", "Median", "10pct", "90pct", "Median", "10pct", "90pct")
+# 
+# #options(knitr.kable.NA = '')
+# 
+# #df = df %>% mutate_if(is.numeric, format, digits=4)
+# 
+# #kbl(data.frame(x=rnorm(10), y=rnorm(10), x= rnorm(10)), digits = c(1, 4, 4))
+# 
+# kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), caption ='Variable selection', escape=FALSE, linesep=c("","", "", "", "\\addlinespace")) %>%
+#   kable_paper("striped") %>%
+#   #add_header_above(c("Parameters" = 1, "VAR2" = 3, "VAR2 1-cross lag" = 3, "VAR2 2-cross lags" = 3)) %>%
+#   #footnote(general="UK Bayesian regression results") %>%
+#   kable_styling(latex_options="scale_down") %>%
+#   column_spec(6, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0)) 
+#   row_spec(c(2,which(df$Cycle=="BIS Basel gap")), bold=TRUE)
 
 
 library(zoo)
@@ -103,6 +102,8 @@ cris$crisis.end <- as.Date(cris$crisis.end)
 
 cris$crisis.pre14=as.Date(as.yearqtr(cris$crisis.start)-1)
 cris$crisis.pre512=as.Date(as.yearqtr(cris$crisis.start)-3)
+
+enddatadate = as.Date("2017-10-01")
 
 # crisis_shade<-geom_rect(data=cris, inherit.aes=F, 
 #                      aes(xmin=crisis.start, xmax=crisis.end, ymin=-Inf, ymax=+Inf), 
@@ -131,14 +132,18 @@ ggplot() +
   geom_rect(data = rects, aes(ymin = -Inf, ymax = Inf, xmin = ystart, xmax = yend, fill=periods), alpha = 0.3) +
   scale_fill_manual(values=fillss)+
   geom_line(data=df1, aes(x=date, y=value, color=variable))+
-  coord_cartesian(ylim = c(-15, 15)) +
+  coord_cartesian(ylim = c(min(df1$value), max(df1$value))) +
   theme(legend.position = "bottom") +
   theme_light() +
   theme(panel.grid = element_blank()) +
-  geom_hline(aes(yintercept= 3.06, linetype = "BIS gap = 3.06"), colour= 'lightsalmon') +
-  geom_hline(aes(yintercept= 1.55, linetype = "weighted gap  = 1.55"), colour= 'mediumturquoise') +
-  scale_linetype_manual(name = "threshold", values = c(2,2),
-                        guide = guide_legend(override.aes = list(color = c("lightsalmon","mediumturquoise"))))+
+  # geom_hline(aes(yintercept= 3.06, linetype = "BIS gap = 3.06"), colour= 'lightsalmon') +
+  # geom_hline(aes(yintercept= 2.92, linetype = "weighted gap  = 2.92"), colour= 'mediumturquoise') +
+  # scale_linetype_manual(name = "threshold", values = c(2,2),
+  #                       guide = guide_legend(override.aes = list(color = c("lightsalmon","mediumturquoise"))))+
+  geom_hline(aes(yintercept= 3, linetype = "optimized threshold  = 3.00"), colour= 'blue') +
+  scale_linetype_manual(name = "threshold", values = c(2),
+                        guide = guide_legend(override.aes = list(color = c("blue"))))+
+  
   labs(x = NULL, y = NULL,
        title = sprintf("Credit gap and systemic crisis: US"))
 ggsave("../Data/Output/Graphs/Weighted_credit_gap_US.pdf", width=8, height=5)
@@ -234,7 +239,7 @@ ggplot() +
   geom_rect(data = rects, aes(ymin = -Inf, ymax = Inf, xmin = ystart, xmax = yend, fill=periods), alpha = 0.3) +
   scale_fill_manual(values=fills)+
   geom_line(data=df1, aes(x=date, y=value, color=variable))+
-  coord_cartesian(ylim = c(-28, 22)) +
+  coord_cartesian(ylim = c(min(df1$value), max(df1$value))) +
   theme(legend.position = "bottom") +
   theme_light() +
   theme(panel.grid = element_blank()) +
@@ -242,10 +247,13 @@ ggplot() +
   # geom_hline(aes(yintercept= 0.6, linetype = "Geochemical atlas limit"), colour= 'blue') +
   # scale_linetype_manual(name = "limit", values = c(2, 2),
   #                       guide = guide_legend(override.aes = list(color = c("blue", "red"))))+
-  geom_hline(aes(yintercept= 3.06, linetype = "BIS gap = 3.06"), colour= 'lightsalmon') +
-  geom_hline(aes(yintercept= 1.55, linetype = "weighted gap  = 1.55"), colour= 'mediumturquoise') +
-        scale_linetype_manual(name = "threshold", values = c(2,2),
-                        guide = guide_legend(override.aes = list(color = c("lightsalmon","mediumturquoise"))))+
+  #geom_hline(aes(yintercept= 3.06, linetype = "BIS gap = 3.06"), colour= 'lightsalmon') +
+  #geom_hline(aes(yintercept= 2.92, linetype = "weighted gap  = 2.92"), colour= 'mediumturquoise') +
+  #      scale_linetype_manual(name = "threshold", values = c(2,2),
+  #                      guide = guide_legend(override.aes = list(color = c("lightsalmon","mediumturquoise"))))+
+  geom_hline(aes(yintercept= 3, linetype = "optimized threshold  = 3.00"), colour= 'blue') +
+        scale_linetype_manual(name = "threshold", values = c(2),
+                        guide = guide_legend(override.aes = list(color = c("blue"))))+
   labs(x = NULL, y = NULL,
        title = sprintf("Credit gap and systemic crisis: UK"))
 ggsave("../Data/Output/Graphs/Weighted_credit_gap_UK.pdf", width=8, height=5)

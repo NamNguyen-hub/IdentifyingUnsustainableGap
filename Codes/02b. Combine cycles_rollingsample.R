@@ -34,7 +34,6 @@ getwd()
 source("HPfilters/OneSidedHPfilterfunc.R")
 source("HPfilters/OneSidedSTMfilterfunc.R")
 
-
 filepath = "../Data/input/credit_fullsample.csv"
 df0 <- read.csv(filepath, header=TRUE, sep=",")
 df0$date <- as.Date(df0$date)
@@ -211,8 +210,12 @@ x<- cbind(c.hp10,c.hp3k10,c.hp25k10,c.hp125k10,c.hp221k10,c.hp400k10,
           c.hamilton13t10, c.hamilton20t10, c.hamilton24t10, c.hamilton28t10,
           c.linear10,c.quad10,c.poly310,c.poly410,c.poly510,c.poly610,
           c.bn210, c.bn310, c.bn410, c.bn510, c.bn610, c.bn710, c.bn810, c.stm10)
+colnames(x)<- c("c.hp_r10","c.hp3k_r10","c.hp25k_r10","c.hp125k_r10","c.hp221k_r10","c.hp400k_r10",
+          "c.hamilton13_r10","c.hamilton20_r10","c.hamilton24_r10","c.hamilton28_r10",
+          "c.linear_r10","c.quad_r10","c.poly3_r10","c.poly4_r10","c.poly5_r10","c.poly6_r10",
+          "c.bn2_r10","c.bn3_r10","c.bn4_r10","c.bn5_r10","c.bn6_r10","c.bn7_r10","c.bn8_r10","c.stm_r10")
 x<- cbind(as.data.frame(df1$date), x)
-names(x)[1]<-"date"
+colnames(x)[1]<-"date"
 x<-subset(x, date>=as.Date(as.yearqtr(startdate)+burn/4))
 
 ## Save data
@@ -380,14 +383,16 @@ for(i in 1:length(countrylist)){
             c.hamilton13t10, c.hamilton20t10, c.hamilton24t10, c.hamilton28t10,
             c.linear10,c.quad10,c.poly310,c.poly410,c.poly510,c.poly610,
             c.bn210, c.bn310, c.bn410, c.bn510, c.bn610, c.bn710, c.bn810, c.stm10)
+  colnames(x)<- c("c.hp_r15","c.hp3k_r15","c.hp25k_r15","c.hp125k_r15","c.hp221k_r15","c.hp400k_r15",
+                  "c.hamilton13_r15","c.hamilton20_r15","c.hamilton24_r15","c.hamilton28_r15",
+                  "c.linear_r15","c.quad_r15","c.poly3_r15","c.poly4_r15","c.poly5_r15","c.poly6_r15",
+                  "c.bn2_r15","c.bn3_r15","c.bn4_r15","c.bn5_r15","c.bn6_r15","c.bn7_r15","c.bn8_r15","c.stm_r15")
+  
   
   x<- cbind(as.data.frame(df1$date), x)
-  names(x)<-c("date",
-              "c.hp15","c.hp3k15","c.hp25k15","c.hp125k15","c.hp221k15","c.hp400k15",
-              "c.hamilton13t15","c.hamilton20t15","c.hamilton24t15","c.hamilton28t15",
-              "c.linear15","c.quad15","c.poly315","c.poly415","c.poly515","c.poly615",
-              "c.bn215","c.bn315","c.bn415","c.bn515","c.bn615","c.bn715","c.bn815","c.stm15")
+  colnames(x)[1]<-"date"
   
+
   x<-subset(x, date>=as.Date(as.yearqtr(startdate)+burn/4))
   
   ## Save data
@@ -553,14 +558,13 @@ for(i in 1:length(countrylist)){
             c.hamilton13t10, c.hamilton20t10, c.hamilton24t10, c.hamilton28t10,
             c.linear10,c.quad10,c.poly310,c.poly410,c.poly510,c.poly610,
             c.bn210, c.bn310, c.bn410, c.bn510, c.bn610, c.bn710, c.bn810, c.stm10)
+  colnames(x)<- c("c.hp_r20","c.hp3k_r20","c.hp25k_r20","c.hp125k_r20","c.hp221k_r20","c.hp400k_r20",
+                  "c.hamilton13_r20","c.hamilton20_r20","c.hamilton24_r20","c.hamilton28_r20",
+                  "c.linear_r20","c.quad_r20","c.poly3_r20","c.poly4_r20","c.poly5_r20","c.poly6_r20",
+                  "c.bn2_r20","c.bn3_r20","c.bn4_r20","c.bn5_r20","c.bn6_r20","c.bn7_r20","c.bn8_r20","c.stm_r20")
   
   x<- cbind(as.data.frame(df1$date), x)
-  names(x)<-c("date",
-              "c.hp20","c.hp3k20","c.hp25k20","c.hp125k20","c.hp221k20","c.hp400k20",
-              "c.hamilton13t20","c.hamilton20t20","c.hamilton24t20","c.hamilton28t20",
-              "c.linear20","c.quad20","c.poly320","c.poly420","c.poly520","c.poly620",
-              "c.bn220","c.bn320","c.bn420","c.bn520","c.bn620","c.bn720","c.bn820","c.stm20")
-  
+  colnames(x)[1]<-"date"
   x<-subset(x, date>=as.Date(as.yearqtr(startdate)+20))
   
 
@@ -568,16 +572,15 @@ for(i in 1:length(countrylist)){
   filepath = sprintf('../Data/Processed/GeneratedCycles_%s.csv',country)
   df3 <- read.csv(filepath, header=TRUE, sep=",")
   df3$date <- as.Date(df3$date)
-  df3<-df3[-which(names(df3)=="c.ma1")]
+  df3<-df3[-which(names(df3)=="c.ma")]
 ### Merge  15-20year or 60-80 quarter in full sample with rolling 20 years 
   df3<-df3%>%
     subset(date>=as.Date(as.yearqtr(startdate)+15)) %>%
     subset(date<as.Date(as.yearqtr(startdate)+20))
-  names(df3)<-c("date",
-              "c.hp20","c.hp3k20","c.hp25k20","c.hp125k20","c.hp221k20","c.hp400k20",
-              "c.hamilton13t20","c.hamilton20t20","c.hamilton24t20","c.hamilton28t20",
-              "c.linear20","c.quad20","c.poly320","c.poly420","c.poly520","c.poly620",
-              "c.bn220","c.bn320","c.bn420","c.bn520","c.bn620","c.bn720","c.bn820","c.stm20")
+  colnames(df3)<- c("date","c.hp_r20","c.hp3k_r20","c.hp25k_r20","c.hp125k_r20","c.hp221k_r20","c.hp400k_r20",
+                  "c.hamilton13_r20","c.hamilton20_r20","c.hamilton24_r20","c.hamilton28_r20",
+                  "c.linear_r20","c.quad_r20","c.poly3_r20","c.poly4_r20","c.poly5_r20","c.poly6_r20",
+                  "c.bn2_r20","c.bn3_r20","c.bn4_r20","c.bn5_r20","c.bn6_r20","c.bn7_r20","c.bn8_r20","c.stm_r20")
   
   x= rbind(df3,x)
   

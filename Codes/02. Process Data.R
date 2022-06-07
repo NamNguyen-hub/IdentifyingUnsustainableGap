@@ -152,6 +152,7 @@ dfx<- df[,-which(names(df)=="date")]
 
 matx=matrix(NA,24,ncol(x))
 colnames(matx)<-names(x)
+#matx<-rbind(t(as.matrix(names(x))),matx)
 glm.x <- glm(y ~ 1, family = binomial)
 test_prob = predict(glm.x, type = "response")
 test_roc = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE, levels = c(0,1)
@@ -160,7 +161,7 @@ bic0=BIC(glm.x)
 aic0=AIC(glm.x)
 roc0=as.numeric(test_roc$auc)
 c.thresh0<-NA
-coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr'))
+coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
 coo1$l05=0.5*coo1$fpr+(1-0.5)*coo1$fnr
 coo1$l03=0.3*coo1$fpr+(1-0.3)*coo1$fnr
 coo1$l07=0.7*coo1$fpr+(1-0.7)*coo1$fnr
@@ -169,8 +170,9 @@ coo1<-coo1[which(coo1$l05==min(coo1$l05)),]
 threshold0<-coo1$threshold
 t10<-coo1$fpr
 t20<-coo1$fnr
-dis0<-coo1$l05
-proc0=auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE)
+dis1<-coo1$l05
+dis0<-coo1$closest.topleft
+proc0=auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
 for (i in 1:ncol(x)){
   glm.x <- glm(y ~ x[,i], family = binomial)
   matx[1,i]=BIC(glm.x)-bic0
@@ -179,14 +181,15 @@ for (i in 1:ncol(x)){
   test_roc = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE, levels = c(0,1)
                  , direction = "<")
   matx[3,i]=as.numeric(test_roc$auc)
-  matx[4,i]=auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE)
+  matx[4,i]=auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
   coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
   coo1$l05=0.5*coo1$fpr+(1-0.5)*coo1$fnr
   coo1$l03=0.3*coo1$fpr+(1-0.3)*coo1$fnr
   coo1$l07=0.7*coo1$fpr+(1-0.7)*coo1$fnr
   coo1<-subset(coo1,coo1$sensitivity>=2/3)
-  coo2<-coo1[which(coo1$l05==min(coo1$l05)),]
-  matx[6:9,i]=as.numeric(coo2[1,c(2:4,6)])
+  
+  coo2<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
+  matx[6:9,i]=as.numeric(coo2[1,c(2:5)])
   dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
   thresh<-matx[6,i]
   minabs<-abs(dfy$test_prob-thresh)
@@ -194,8 +197,9 @@ for (i in 1:ncol(x)){
   dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
   matx[5,i]=dfy[1,3]
   
-  coo2<-coo1[which(coo1$l03==min(coo1$l03)),]
-  matx[11:14,i]=as.numeric(coo2[1,c(2:4,7)])
+  
+  coo2<-coo1[which(coo1$l05==min(coo1$l05)),]
+  matx[11:14,i]=as.numeric(coo2[1,c(2:4,6)])
   dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
   thresh<-matx[11,i]
   minabs<-abs(dfy$test_prob-thresh)
@@ -203,8 +207,8 @@ for (i in 1:ncol(x)){
   dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
   matx[10,i]=dfy[1,3]
   
-  coo2<-coo1[which(coo1$l07==min(coo1$l07)),]
-  matx[16:19,i]=as.numeric(coo2[1,c(2:4,8)])
+  coo2<-coo1[which(coo1$l03==min(coo1$l03)),]
+  matx[16:19,i]=as.numeric(coo2[1,c(2:4,7)])
   dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
   thresh<-matx[16,i]
   minabs<-abs(dfy$test_prob-thresh)
@@ -212,8 +216,8 @@ for (i in 1:ncol(x)){
   dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
   matx[15,i]=dfy[1,3]
   
-  coo2<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
-  matx[21:24,i]=as.numeric(coo2[1,c(2:5)])
+  coo2<-coo1[which(coo1$l07==min(coo1$l07)),]
+  matx[21:24,i]=as.numeric(coo2[1,c(2:4,8)])
   dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
   thresh<-matx[21,i]
   minabs<-abs(dfy$test_prob-thresh)
@@ -230,9 +234,12 @@ colnames(matx)<-c("BIC","AIC","AUC","psAUC",
                   "c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function",
                   "c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function")
 matx<-matx[,-which(names(matx)=="r.Threshold")]
-matx<-rbind(c(0,0,roc0,proc0,c.thresh0,t10,t20,dis0,c.thresh0,t10,t20,dis0,c.thresh0,t10,t20,dis0,c.thresh0,t10,t20,dis0),matx)
+matx<-rbind(c(0,0,roc0,proc0,c.thresh0,t10,t20,dis0,c.thresh0,t10,t20,dis1,c.thresh0,t10,t20,dis1,c.thresh0,t10,t20,dis1),matx)
 rownames(matx)[1]<-"null"
-write.table(matx, "../Data/Output/Modelselection_512.csv", sep=',', row.names=TRUE, col.names=TRUE)
+matx<-cbind(as.matrix(rownames(matx)),matx)
+colnames(matx)[1]<-"Cycles"
+matx[["Cycles"]][which(matx$Cycles=="weightedcycle")]="1_sided weighted_cycle"
+write.table(matx, "../Data/Output/Modelselection_512.csv", sep=',', row.names=FALSE, col.names=TRUE)
 
 
 

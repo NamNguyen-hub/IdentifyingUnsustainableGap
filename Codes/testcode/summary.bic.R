@@ -90,7 +90,7 @@ summary.bic.glm.pauc<- function (object, n.models = 5, digits = max(3, getOption
   glm.out <- glm(x$y~c.hat, family = "binomial")
   test_prob = predict(glm.out, type = "response")
   test_roc = pROC::roc(x$y ~ test_prob, plot = FALSE, print.auc = FALSE,
-                       levels = c(1,0) , direction = ">")
+                       levels = c(0,1) , direction = "<")
   pauc0=as.numeric(pROC::auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se",
                              partial.auc.correct=TRUE))
   

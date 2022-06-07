@@ -38,7 +38,7 @@ output:
 
 ## Motivation
 - Area under the curve of operating characteristic (AUROC or AUC) has been widely used as a criterion to determine the performance of a EWI. But it has received some criticism regarding the lower left area of the curve representing low predictive ability of the indicator.
-- Borio and Drehmann (2009) and Beltran et al (2021) proposed a policy loss function constraining the relevance of the curve measurement to to just a portion where Type II error rate is less than 1/3 or at least 2/3 of the crises are predicted.    
+- Borio and Drehmann (2009) and Beltran et al (2021) proposed a policy loss function constraining the relevance of the curve measurement to just a portion where Type II error rate is less than 1/3 or at least 2/3 of the crises are predicted.    
 - Detken (2014) proposed using partial standardized area under the curve (psAUC) as an alternative measurement of the performance of an EWI.
 
 ## Contribution
@@ -58,13 +58,13 @@ L_{\theta,\rho}=\alpha TypeI(\theta)+(1-\alpha)TypeII(\theta)|TPR\ge2/3
 
 Galán (2019) proposed rolling sample of 15 and 20 years when creating one sided cycle.
 
-Drehmann (2021) created Hamilton filter in a panel setting with fixed coefficients on independent variable across countries.
+Drehmann (2021) created Hamilton filter in a panel setting with fixed coefficients on independent variables across countries.
 
 ## Data
 Sample data periods: 
 
-- 1970-Q4 - 2017-Q4 across 43 countries. 
-We omit periods for countries with shorter credit measurement.
+- 1970:Q4 - 2017:Q4 quarterly data across 43 countries. 
+  + We omit periods for countries with shorter credit measurements.
 
 Systemic crisis data:
 
@@ -74,7 +74,7 @@ Systemic crisis data:
 Credit/GDP ratio data:
 
 - Bank of International Settlement (BIS)
-  + Latest Credit data is available at 2021:Q3
+  + Latest Credit data is available until 2021:Q3
 
 # Model
 ## Credit gaps creation
@@ -163,44 +163,94 @@ Model_k :  pre.crisis_{ti} \sim \sum\nolimits_j \beta_j * credit.gap_{tij}
 We selected 29 credit gap measurements based on these 2 criteria.
 
 
-## Variable selection (top 24 gaps ranked by psAUC)
+## Variable selection (top 23 gaps ranked by psAUC)
 
-\resizebox{\linewidth}{!}{
-\begin{tabular}[t]{lrrr>{}rrrrr}
-\toprule
-Cycle & BIC & AIC & AUC & psAUC & c.Threshold & Type.I & Type.II & Policy.Loss.Function\\
-\midrule
-null & 0.0000 & 0.0000 & 0.5000 & \textbf{0.5000} & NA & 1.0000 & 0.0000 & 0.5000\\
-c.bn620 & -108.0679 & -114.4506 & 0.7048 & \textbf{0.6379} & 0.6581 & 0.3962 & 0.3019 & 0.2481\\
-c.hamilton28.panel & -149.8518 & -156.2346 & 0.7107 & \textbf{0.6359} & 9.7674 & 0.3912 & 0.3066 & 0.2470\\
-c.hamilton13.panelr20 & -149.3378 & -155.7205 & 0.7030 & \textbf{0.6328} & 5.9924 & 0.4287 & 0.2547 & 0.2487\\
-c.hamilton24.panel & -134.4093 & -140.7920 & 0.6991 & \textbf{0.6322} & 7.1794 & 0.4383 & 0.2689 & 0.2644\\
-\addlinespace
-c.hamilton13.panelr15 & -125.3568 & -131.7396 & 0.6923 & \textbf{0.6314} & 6.6651 & 0.4256 & 0.2925 & 0.2666\\
-c.ma1 & -120.8108 & -127.1936 & 0.6922 & \textbf{0.6313} & 5.7812 & 0.3989 & 0.3160 & 0.2590\\
-c.hamilton20.panelr15 & -134.3190 & -140.7017 & 0.6981 & \textbf{0.6311} & 7.5583 & 0.4612 & 0.2689 & 0.2850\\
-c.hamilton20.panelr20 & -151.3035 & -157.6862 & 0.7045 & \textbf{0.6311} & 8.0087 & 0.4323 & 0.3066 & 0.2809\\
-c.hamilton28.panelr20 & -164.6098 & -170.9925 & 0.7157 & \textbf{0.6300} & 10.8705 & 0.3946 & 0.2925 & 0.2412\\
-\addlinespace
-c.hamilton24.panelr20 & -155.8958 & -162.2786 & 0.7094 & \textbf{0.6299} & 9.2099 & 0.4253 & 0.2830 & 0.2610\\
-c.hamilton24.panelr15 & -142.3051 & -148.6879 & 0.7027 & \textbf{0.6295} & 10.5773 & 0.3958 & 0.3160 & 0.2565\\
-c.hamilton20.panel & -126.8625 & -133.2452 & 0.6907 & \textbf{0.6288} & 5.6212 & 0.4686 & 0.2830 & 0.2997\\
-c.hamilton28.panelr15 & -153.5231 & -159.9058 & 0.7085 & \textbf{0.6267} & 11.5786 & 0.3871 & 0.3019 & 0.2410\\
-c.hamilton13.panel & -133.9347 & -140.3175 & 0.6922 & \textbf{0.6250} & 4.9769 & 0.4285 & 0.2877 & 0.2664\\
-\addlinespace
-c.bn220 & -109.3128 & -115.6955 & 0.6963 & \textbf{0.6218} & 0.2776 & 0.4080 & 0.3255 & 0.2724\\
-c.linear2 & -135.4069 & -141.7896 & 0.6879 & \textbf{0.6204} & 3.9989 & 0.4616 & 0.2925 & 0.2986\\
-c.bn2 & -135.9914 & -142.3741 & 0.6842 & \textbf{0.6165} & 0.1864 & 0.4530 & 0.3113 & 0.3021\\
-c.bn6 & -132.7915 & -139.1742 & 0.6835 & \textbf{0.6113} & 0.4710 & 0.4371 & 0.2830 & 0.2712\\
-c.bn615 & -54.9953 & -61.3781 & 0.6756 & \textbf{0.6070} & 0.5680 & 0.4179 & 0.3255 & 0.2806\\
-\addlinespace
-c.bn215 & -83.9469 & -90.3297 & 0.6749 & \textbf{0.6047} & 0.1349 & 0.4761 & 0.3302 & 0.3357\\
-c.poly420 & 3.5738 & -2.8090 & 0.5772 & \textbf{0.6011} & 0.1651 & 0.4980 & 0.3302 & 0.3570\\
-BIS Basel gap & -121.5910 & -127.9738 & 0.6733 & \textbf{0.5960} & 3.0578 & 0.4441 & 0.3255 & 0.3032\\
-c.bn4 & -169.1186 & -175.5014 & 0.6892 & \textbf{0.5943} & 1.2840 & 0.3837 & 0.3255 & 0.2532\\
-c.bn415 & -89.6147 & -95.9975 & 0.6669 & \textbf{0.5929} & 0.4435 & 0.4792 & 0.2925 & 0.3152\\
-\bottomrule
-\end{tabular}}
+```{r varselect, echo=FALSE, warning=FALSE, message=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+library('kableExtra')
+library(dplyr)
+library(knitr)
+#library(rstudioapi)
+#setwd(dirname(getActiveDocumentContext()$path))
+#getwd()
+
+filepath='../Data/Output/Modelselection_512.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+#rownames(df) <- df[,1]
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+#df<-df[,-1]
+df<-df[-c(27:nrow(df)),-c(10:ncol(df))]
+#df<-df[-2,]
+
+#colnames(df) <- c("Median", "10pct", "90pct", "Median", "10pct", "90pct", "Median", "10pct", "90pct")
+
+#options(knitr.kable.NA = '')
+
+#df = df %>% mutate_if(is.numeric, format, digits=4)
+
+#kbl(data.frame(x=rnorm(10), y=rnorm(10), x= rnorm(10)), digits = c(1, 4, 4))
+
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  kable_paper("striped") %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3, "VAR2 1-cross lag" = 3, "VAR2 2-cross lags" = 3)) %>%
+  #footnote(general="UK Bayesian regression results") %>%
+  kable_styling(latex_options="scale_down") %>%
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  gsub(".centering", "", ., perl = TRUE)
+```
+
+## Variable Selection (MC3)
+
+```{r varselectMC3, echo=FALSE, warning=FALSE, message=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+library('kableExtra')
+library(dplyr)
+library(knitr)
+#library(rstudioapi)
+#setwd(dirname(getActiveDocumentContext()$path))
+#getwd()
+
+filepath='../Data/Output/MC3.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+#rownames(df) <- df[,1]
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+colnames(df)<-c("Variable","Pr(B!=0)","Variable","Pr(B!=0)")
+
+#df<-df[,-1]
+df<-df[-c(27:nrow(df)),]
+#df<-df[-2,]
+
+#colnames(df) <- c("Median", "10pct", "90pct", "Median", "10pct", "90pct", "Median", "10pct", "90pct")
+
+#options(knitr.kable.NA = '')
+
+#df = df %>% mutate_if(is.numeric, format, digits=4)
+
+#kbl(data.frame(x=rnorm(10), y=rnorm(10), x= rnorm(10)), digits = c(1, 4, 4))
+
+kbl(df, "latex", booktabs = T, digits = c(4, 4,4,4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  #kable_paper("striped") %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3, "VAR2 1-cross lag" = 3, "VAR2 2-cross lags" = 3)) %>%
+  #footnote(general="UK Bayesian regression results") %>%
+  kable_styling(latex_options="scale_down") %>%
+  #column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  gsub(".centering", "", ., perl = TRUE)
+```
 
 # Model averaging
 
@@ -245,7 +295,7 @@ p(\beta_1|D, \beta_1\ne 0) = \sum\nolimits_{A_1} p(\beta_1|D,M_k)p'(M_k|D)
 
 
 - where $p'(M_k|D)=p(M_k|D)/ pr[\beta_1 \ne 0|D]$
-- and $pr[\beta_1 \ne 0|D] = \sum\limits_{A_1} P(M_k|D)$
+- and $pr[\beta_1 \ne 0|D] = \sum\limits_{A_1} p(M_k|D)$
   + this is the probability that $\beta_1$ is in the averaged model
   + $A_1= \{M_k: k=1,...,K; \beta_1 \ne 0\}$, is the set of models that includes $\beta_1$
 
@@ -306,46 +356,124 @@ $\Rightarrow$ To create one-sided crisis weighted averaged credit gap for each c
 \hat{c}_{ti,one-sided} = \sum\nolimits_{j} w_{tj} * c_{tij}
 \end{align}
 
+## Weights stacked graph
+Weights are restricted to be positive to ensure stability
+```{r weight, echo=FALSE, out.width='100%', fig.align="center"}
+knitr::include_graphics('../Data/Output/Graphs/Weights_stack.pdf')
+```
+
+## Weights series graph
+```{r weight_series, echo=FALSE, out.width='100%', fig.align="center"}
+knitr::include_graphics('../Data/Output/Graphs/Weights_series.pdf')
+```
 
 # Empirical Results
-## Comparing performance of weighted gap as an EWI
+## Comparing performance of weighted gap - Full Sample
 
-\resizebox{\linewidth}{!}{
-\begin{tabular}[t]{llrrr>{}rrrrr}
-\toprule
-  & Cycle & BIC & AIC & AUC & psAUC & c.Threshold & Type.I & Type.II & Policy.Loss.Function\\
-\midrule
-1 & null & 0.0000 & 0.0000 & 0.5000 & \textbf{0.5000} & NA & 1.0000 & 0.0000 & 0.5000\\
-\textbf{2} & \textbf{1-sided weighted-gap} & \textbf{-187.2874} & \textbf{-193.6701} & \textbf{0.7407} & \textbf{\textbf{0.6809}} & \textbf{1.5478} & \textbf{0.3724} & \textbf{0.2877} & \textbf{0.2215}\\
-3 & c.bn620 & -108.0679 & -114.4506 & 0.7048 & \textbf{0.6379} & 0.6581 & 0.3962 & 0.3019 & 0.2481\\
-4 & c.hamilton28.panel & -149.8518 & -156.2346 & 0.7107 & \textbf{0.6359} & 9.7674 & 0.3912 & 0.3066 & 0.2470\\
-5 & c.hamilton13.panelr20 & -149.3378 & -155.7205 & 0.7030 & \textbf{0.6328} & 5.9924 & 0.4287 & 0.2547 & 0.2487\\
-\addlinespace
-6 & c.hamilton24.panel & -134.4093 & -140.7920 & 0.6991 & \textbf{0.6322} & 7.1794 & 0.4383 & 0.2689 & 0.2644\\
-7 & c.hamilton13.panelr15 & -125.3568 & -131.7396 & 0.6923 & \textbf{0.6314} & 6.6651 & 0.4256 & 0.2925 & 0.2666\\
-8 & c.ma1 & -120.8108 & -127.1936 & 0.6922 & \textbf{0.6313} & 5.7812 & 0.3989 & 0.3160 & 0.2590\\
-9 & c.hamilton20.panelr15 & -134.3190 & -140.7017 & 0.6981 & \textbf{0.6311} & 7.5583 & 0.4612 & 0.2689 & 0.2850\\
-10 & c.hamilton20.panelr20 & -151.3035 & -157.6862 & 0.7045 & \textbf{0.6311} & 8.0087 & 0.4323 & 0.3066 & 0.2809\\
-\addlinespace
-11 & c.hamilton28.panelr20 & -164.6098 & -170.9925 & 0.7157 & \textbf{0.6300} & 10.8705 & 0.3946 & 0.2925 & 0.2412\\
-12 & c.hamilton24.panelr20 & -155.8958 & -162.2786 & 0.7094 & \textbf{0.6299} & 9.2099 & 0.4253 & 0.2830 & 0.2610\\
-18 & c.linear2 & -135.4069 & -141.7896 & 0.6879 & \textbf{0.6204} & 3.9989 & 0.4616 & 0.2925 & 0.2986\\
-19 & c.bn2 & -135.9914 & -142.3741 & 0.6842 & \textbf{0.6165} & 0.1864 & 0.4530 & 0.3113 & 0.3021\\
-20 & c.bn6 & -132.7915 & -139.1742 & 0.6835 & \textbf{0.6113} & 0.4710 & 0.4371 & 0.2830 & 0.2712\\
-\addlinespace
-21 & c.bn615 & -54.9953 & -61.3781 & 0.6756 & \textbf{0.6070} & 0.5680 & 0.4179 & 0.3255 & 0.2806\\
-22 & c.bn215 & -83.9469 & -90.3297 & 0.6749 & \textbf{0.6047} & 0.1349 & 0.4761 & 0.3302 & 0.3357\\
-23 & c.poly420 & 3.5738 & -2.8090 & 0.5772 & \textbf{0.6011} & 0.1651 & 0.4980 & 0.3302 & 0.3570\\
-\textbf{24} & \textbf{BIS Basel gap} & \textbf{-121.5910} & \textbf{-127.9738} & \textbf{0.6733} & \textbf{\textbf{0.5960}} & \textbf{3.0578} & \textbf{0.4441} & \textbf{0.3255} & \textbf{0.3032}\\
-25 & c.bn4 & -169.1186 & -175.5014 & 0.6892 & \textbf{0.5943} & 1.2840 & 0.3837 & 0.3255 & 0.2532\\
-\addlinespace
-26 & c.bn415 & -89.6147 & -95.9975 & 0.6669 & \textbf{0.5929} & 0.4435 & 0.4792 & 0.2925 & 0.3152\\
-27 & c.bn520 & -99.7674 & -106.1501 & 0.6744 & \textbf{0.5928} & 0.5016 & 0.4234 & 0.3302 & 0.2883\\
-28 & c.stm15 & -79.5531 & -85.9358 & 0.6575 & \textbf{0.5924} & 2.0027 & 0.4778 & 0.3160 & 0.3281\\
-29 & c.hp125k1 & -92.2897 & -98.6725 & 0.6562 & \textbf{0.5924} & 2.5216 & 0.4547 & 0.3302 & 0.3158\\
-30 & c.hp221k1 & -106.8842 & -113.2669 & 0.6656 & \textbf{0.5921} & 2.6641 & 0.4561 & 0.3160 & 0.3079\\
-\bottomrule
-\end{tabular}}
+```{r varcompfull, echo=FALSE, warning=FALSE, message=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+library('kableExtra')
+library(dplyr)
+library(knitr)
+#library(rstudioapi)
+#setwd(dirname(getActiveDocumentContext()$path))
+#getwd()
+
+filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_full.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(10:ncol(df))]
+
+#options(knitr.kable.NA = '')
+
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  kable_paper("striped") %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  #footnote(general="") %>%
+  kable_styling(latex_options="scale_down") %>%
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)%>%
+  gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  gsub(".centering", "", ., perl = TRUE)
+```
+
+
+## Comparing performance of weighted gap as an EWI - AE
+
+```{r varcompAE, echo=FALSE, warning=FALSE, message=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+library('kableExtra')
+library(dplyr)
+library(knitr)
+#library(rstudioapi)
+#setwd(dirname(getActiveDocumentContext()$path))
+#getwd()
+
+filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_AE.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(10:ncol(df))]
+#options(knitr.kable.NA = '')
+
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  kable_paper("striped") %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  #footnote(general="") %>%
+  kable_styling(latex_options="scale_down") %>%
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)%>%
+  gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  gsub(".centering", "", ., perl = TRUE)
+```
+
+## Comparing performance of weighted gap as an EWI - EME
+
+```{r varcompEME, echo=FALSE, warning=FALSE, message=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+library('kableExtra')
+library(dplyr)
+library(knitr)
+#library(rstudioapi)
+#setwd(dirname(getActiveDocumentContext()$path))
+#getwd()
+
+filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_EME.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(10:ncol(df))]
+#options(knitr.kable.NA = '')
+
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  kable_paper("striped") %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  #footnote(general="") %>%
+  kable_styling(latex_options="scale_down") %>%
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)%>%
+  gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  gsub(".centering", "", ., perl = TRUE)
+```
 
 ## Plot weighted gap against BIS gap
 

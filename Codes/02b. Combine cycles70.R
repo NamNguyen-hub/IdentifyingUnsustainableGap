@@ -47,7 +47,7 @@ crisisdatadate=as.Date('2017-10-01')
 df1 = subset(df0, date >= as.Date(as.yearqtr(crisisdatadate)-18)) 
 dropList <- names(which(colSums(is.na(df1))>0))
 dropList <- c(dropList,"XM")
-df0 <- df0[, !colnames(df0) %in% dropList] #drop countries without data before 2000
+df0 <- df0[, !colnames(df0) %in% dropList] #drop countries without data before 2000 (2017:Q4-18yrs)
                                           #2017-(15burn+3yrprecrisis) window
 countrylist <- names(df0)
 countrylist <- countrylist[-which(countrylist == "date")]
@@ -74,12 +74,9 @@ c.hp125k=filterHP(credit1, lambda=125000)[,"cycle"]
 c.hp221k=filterHP(credit1, lambda=221000)[,"cycle"]
 c.hp400k=filterHP(credit1, lambda=400000)[,"cycle"]
 
-#x<-list(c.hp,c.hp3k,c.hp25k,c.hp125k,c.hp221k,c.hp400k)
-
 t=nrow(df1)-burn  
 y=nrow(df1)
-#! add check if t is positive - for countries with shorter than 15 periods
-  
+
 # store of 1 sided cycle decomp
   c.linear2=rep(0,t)
   c.quad2=rep(0,t)
@@ -87,7 +84,6 @@ y=nrow(df1)
   c.poly4=rep(0,t)
   c.poly5=rep(0,t)
   c.poly6=rep(0,t)
-#  c.bn1=rep(0,t)
   c.bn2=rep(0,t)
   c.bn3=rep(0,t)
   c.bn4=rep(0,t)
@@ -196,61 +192,25 @@ for(i in 1:t){
   c.hp221k1=c.hp221k[(burn+1):y]
   c.hp400k1=c.hp400k[(burn+1):y]
   
-
-  
   #cbind all series
   x<- cbind(c.hp1,c.hp3k1,c.hp25k1,c.hp125k1,c.hp221k1,c.hp400k1,
             c.hamilton13t1, c.hamilton20t1, c.hamilton24t1, c.hamilton28t1,
             c.linear2,c.quad2,c.poly3,c.poly4,c.poly5,c.poly6,
             c.bn2, c.bn3, c.bn4, c.bn5, c.bn6, c.bn7, c.bn8, c.stm1, c.ma1)
+  
+  colnames(x) <- c("c.hp","c.hp3k","c.hp25k","c.hp125k","c.hp221k","c.hp400k",
+                "c.hamilton13","c.hamilton20","c.hamilton24","c.hamilton28",
+                "c.linear","c.quad","c.poly3","c.poly4","c.poly5","c.poly6",
+                "c.bn2","c.bn3","c.bn4","c.bn5","c.bn6","c.bn7","c.bn8","c.stm","c.ma")
+  
+  
   #append date column
   date<-subset(df1, date>=as.Date(as.yearqtr(startdate)+burn/4))
   date<-as.data.frame(date$date)
   names(date)<-"date"
   x<-cbind(date,x)
   x$date<-as.Date(x$date)
-  #x<-subset(x, date>as.Date(as.yearqtr(startdate)+burn/4))
-  
   
   filepath = sprintf('../Data/Processed/GeneratedCycles_%s.csv',country)
   write.table(x, filepath, sep=',' , row.names = FALSE)
 }
-
-  #x=list(c.hp1,c.hp3k1,c.hp400k1,c.uc1,c.hamilton2, c.linear2 , c.quad2, c.bn2)
-  # x<-lapply(x, function(x) x=x[1:(n.end+i-1)])
-  #x<-lapply(x, ts, start=startdate_diff, frequency=4)
-  
-  # c.hp=x[1][[1]]
-  # c.hp3k=x[2][[1]]
-  # c.hp400k=x[3][[1]]
-  # c.uc=x[4][[1]]
-  # c.hamilton = x[5][[1]]
-  # c.linear = x[6][[1]]
-  # c.quad = x[7][[1]]
-  # c.bn = x[8][[1]]
-  
-  
-  ## Save data into csv file
-#   
-
-  #   filepath = sprintf('../Data/Processed/GeneratedCycles_%s.csv',country)
-  #   c.df$HP<-c.hp
-  #   c.df$HP3k<-c.hp3k
-  #   c.df$HP400k<-c.hp400k
-  #   c.df$Hamilton<-c.hamilton
-  #   c.df$linear<-c.linear
-  #   c.df$quad<-c.quad
-  #   c.df$BN<-c.bn
-  #   c.df$UC<-c.uc
-  #   write.table(c.df, filepath, sep=',' , row.names = FALSE)
-  
-  
-#   #write.table append
-#   if (country=="AR"){
-#     write.table(df_rmse1, "../Data/Processed/RMSE_fullsample.csv", sep=',', row.names=FALSE)
-#   }else {
-#     write.table(df_rmse1, "../Data/Processed/RMSE_fullsample.csv", sep=',', append=TRUE, row.names=FALSE, col.names = FALSE)
-#   }
-# }
-  
-  

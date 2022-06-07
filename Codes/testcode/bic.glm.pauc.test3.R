@@ -337,7 +337,7 @@ library(BAS)
       prior <- apply(a$which*prior.mat + (!a$which)*(1 - prior.mat), 1, prod)
       bIb <- as.numeric(coef %*% info %*% coef)
       lrt <- bIb - (a$r2 * bIb)
-      bic <- lrt + 4 * (a$size) * log(nobs) - 2 * log(prior)
+      bic <- lrt + 1.25*(a$size) * log(nobs) - 2 * log(prior)
       occam <- bic - min(bic) < 2 * OR.fix * log(OR)
       size <- a$size[occam]
       label <- a$label[occam]
@@ -401,13 +401,21 @@ library(BAS)
       model.fits[[k]][, 2] <- sqrt(diag(cov))
       test_prob = predict(glm.out, type = "response")
       test_roc = pROC::roc(y ~ test_prob, plot = FALSE, print.auc = FALSE,
-                           levels = c(1,0) , direction = ">")
+                           levels = c(0,1) , direction = "<")
+
       pauc[k]=as.numeric(pROC::auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se",
                                    partial.auc.correct=TRUE, 
                                    allow.invalid.partial.auc.correct=TRUE))
+      
+      coeff1 <- glm.out$coefficients
+      coeff1 <- coeff1[-1]
+      if (sum(coeff1<0) > 0) { 
+        pauc[k]=0 ## get rid of negative coefficients
+      }
+      
     }
     #bic <- ((1 - pauc) * 1000 * 2) - df * log(nobs) - 2 * log(prior)
-    bic <- (-1) * ((pauc - 0.5) * 500 * 2) + 4 * rank0 * log(nobs) - 2 * log(prior)
+    bic <- (-1) * ((pauc - 0.5) * 100 * 2) + rank0 * log(nobs) - 2 * log(prior)
     if (occam.window) 
       occam <- bic - min(bic) < 2 * log(OR)
     else occam = rep(TRUE, length(bic))

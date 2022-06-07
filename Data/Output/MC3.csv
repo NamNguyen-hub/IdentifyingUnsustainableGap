@@ -1,0 +1,15 @@
+Variable,Pr(B!=0),Variable,Pr(B!=0)
+Intercept,1,c.bn2,0.3721325
+c.hamilton28_panel,0.999968,c.bn3_r10,0.2478165
+c.bn7_r15,0.93097125,c.hp400k,0.23089975
+c.poly3,0.915792,c.hamilton24_r20,0.2174585
+c.hamilton13_panel,0.733247,c.hamilton13_r20,0.1958425
+c.hamilton13_r10,0.70601225,c.bn2_r10,0.19159775
+c.hamilton28,0.65141375,c.stm,0.18944125
+c.hamilton13,0.6438865,c.hamilton28_r20,0.179868
+c.bn3_r15,0.514728,c.hp_r20,0.1794185
+c.hp3k,0.4888055,c.hp,0.17607625
+c.hp3k_r20,0.4887615,c.bn8_r20,0.15609075
+c.poly6,0.39826475,c.linear_r20,0.15264225
+,,c.hp221k,0.144046
+,,c.stm_r20,0.13934425

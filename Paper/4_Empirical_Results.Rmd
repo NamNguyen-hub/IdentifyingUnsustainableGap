@@ -1,0 +1,122 @@
+# EMPIRICAL RESULTS
+
+
+# Empirical Results
+## Comparing performance of weighted gap - Full Sample
+
+```{r varcompfull, echo=FALSE, warning=FALSE, message=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+library('kableExtra')
+library(dplyr)
+library(knitr)
+#library(rstudioapi)
+#setwd(dirname(getActiveDocumentContext()$path))
+#getwd()
+
+filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_full.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(10:ncol(df))]
+
+#options(knitr.kable.NA = '')
+
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  kable_paper("striped") %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  #footnote(general="") %>%
+  kable_styling(latex_options=c("scale_down","HOLD_position")) %>%
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)#%>%
+  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  #gsub(".centering", "", ., perl = TRUE)
+```
+
+
+## Comparing performance of weighted gap as an EWI - AE
+
+```{r varcompAE, echo=FALSE, warning=FALSE, message=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+library('kableExtra')
+library(dplyr)
+library(knitr)
+#library(rstudioapi)
+#setwd(dirname(getActiveDocumentContext()$path))
+#getwd()
+
+filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_AE.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(10:ncol(df))]
+#options(knitr.kable.NA = '')
+
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  kable_paper("striped") %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  #footnote(general="") %>%
+  kable_styling(latex_options=c("scale_down","HOLD_position")) %>%
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)#%>%
+  #(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  #gsub(".centering", "", ., perl = TRUE)
+```
+
+## Comparing performance of weighted gap as an EWI - EME
+
+```{r varcompEME, echo=FALSE, warning=FALSE, message=FALSE}
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+library('kableExtra')
+library(dplyr)
+library(knitr)
+#library(rstudioapi)
+#setwd(dirname(getActiveDocumentContext()$path))
+#getwd()
+
+filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_EME.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(10:ncol(df))]
+#options(knitr.kable.NA = '')
+
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  kable_paper("striped") %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  #footnote(general="") %>%
+  kable_styling(latex_options=c("scale_down","HOLD_position")) %>%
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)
+  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  #gsub(".centering", "", ., perl = TRUE)
+```
+
+## Plot weighted gap against BIS gap
+
+```{r wUS, echo=FALSE, out.width='100%', fig.align="center"}
+knitr::include_graphics('../Data/Output/Graphs/Weighted_credit_gap_US.pdf')
+```
+
+## Plot weighted gap against BIS gap
+
+```{r wUK, echo=FALSE, out.width='100%', fig.align="center"}
+knitr::include_graphics('../Data/Output/Graphs/Weighted_credit_gap_UK.pdf')
+```

@@ -842,8 +842,8 @@ summary(df22)
 
 
 
-
-### No horizon, just crisis indicator
+###No horizon, just crisis indicator-------------- 
+### 
 
 tf <- "../Data/Input/esrb.fcdb20220120.en.xlsx"
 data1 <-read_excel(tf, sheet="Systemic crises")

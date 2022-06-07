@@ -401,7 +401,7 @@ library(BAS)
       model.fits[[k]][, 2] <- sqrt(diag(cov))
       test_prob = predict(glm.out, type = "response")
       test_roc = pROC::roc(y ~ test_prob, plot = FALSE, print.auc = FALSE,
-                           levels = c(1,0) , direction = ">")
+                           levels = c(0,1) , direction = "<")
       pauc[k]=as.numeric(pROC::auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se",
                                    partial.auc.correct=TRUE, 
                                    allow.invalid.partial.auc.correct=TRUE))

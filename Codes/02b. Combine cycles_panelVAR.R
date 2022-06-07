@@ -93,7 +93,7 @@ df1<-df
 df3<-data.frame()
 
 ## For loop
-### For loop 1
+### For loop 1: first 15 years
 enddate1=as.yearqtr(startdate)+15-2/4
 enddate1= enddate1+1/4
   df<-df1 %>%
@@ -152,9 +152,9 @@ enddate1= enddate1+1/4
 
 
 
-### For loop2
-enddate1=as.yearqtr(startdate)+15-2/4
-while (enddate1 <= as.yearqtr(enddate)){
+### For loop2: iterate additional quarter after 15 burn in year
+enddate1=as.yearqtr(startdate)+15-2/4+1/4
+while (enddate1 < as.yearqtr(enddate)){
   enddate1= enddate1+1/4
 df<-df1 %>%
   as.data.frame() %>%
@@ -220,7 +220,8 @@ df3<-df3 %>%
 df3$date<-as.Date(df3$date)
 df4<- df3 %>%
   group_by(ID) %>%
-  filter(date>=as.Date(as.yearqtr(min(date))+15-1/4-13/4-2/4))
+  filter(date>=as.Date(as.yearqtr(min(date))+15-1/4-13/4-2/4)) 
+                                  #13 quarters already omitted because of hamilton13 filter
 
 filepath = sprintf('../Data/Processed/GeneratedCycles_hamiltonpanel.csv')
 write.table(df4, filepath, sep=',' , row.names = FALSE)
@@ -291,9 +292,9 @@ df3<-df3[-nrow(df3)]
 
 
 ### For loop2
-enddate1=as.yearqtr(startdate)+15-2/4
+enddate1=as.yearqtr(startdate)+15-2/4+1/4
 startdate1=as.yearqtr(as.Date(startdate))-1/4
-while (enddate1 <= as.yearqtr(enddate)){
+while (enddate1 < as.yearqtr(enddate)){
   enddate1= enddate1+1/4
   startdate1=startdate1+1/4
   df<-df1 %>%
@@ -435,9 +436,9 @@ df3<-df3[-nrow(df3)]
 
 
 ### For loop2
-enddate1=as.yearqtr(startdate)+20-2/4
+enddate1=as.yearqtr(startdate)+20-2/4+1/4
 startdate1=as.yearqtr(as.Date(startdate))-1/4
-while (enddate1 <= as.yearqtr(enddate)){
+while (enddate1 < as.yearqtr(enddate)){
   enddate1= enddate1+1/4
   startdate1=startdate1+1/4
   df<-df1 %>%

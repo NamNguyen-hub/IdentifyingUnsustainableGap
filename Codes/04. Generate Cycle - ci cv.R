@@ -271,6 +271,8 @@ write.table(df0, filepath, sep=',' , row.names = TRUE)
 ## Plot pAUC in 20yrs rolling sample
 
 
+####-----------------------------------------------------####
+
 # pAUC table
 ## EME countrylist and AE countrylist
 filepath = '../Data/Output/weightedcycle_fullsample.csv'
@@ -302,10 +304,10 @@ y=df1$crisis
 x=df1[-c(1:3)]
 #dfx<- df1[,-which(names(df)=="date")]
 
-matx=matrix(NA,24,ncol(x))
+matx=matrix(NA,14,ncol(x))
 colnames(matx)<-names(x)
 #matx<-rbind(t(as.matrix(names(x))),matx)
-glm.x <- glm(y ~ 1, family = binomial)
+glm.x <- glm(y ~ 1, family = "binomial")
 test_prob = predict(glm.x, type = "response")
 test_roc = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE, levels = c(0,1)
                , direction = "<")
@@ -314,32 +316,39 @@ aic0=AIC(glm.x)
 roc0=as.numeric(test_roc$auc)
 c.thresh0<-NA
 coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
-coo1$l05=0.5*coo1$fpr+(1-0.5)*coo1$fnr
-coo1$l03=0.3*coo1$fpr+(1-0.3)*coo1$fnr
-coo1$l07=0.7*coo1$fpr+(1-0.7)*coo1$fnr
 coo1<-subset(coo1,coo1$sensitivity>=2/3)
-coo1<-coo1[which(coo1$l05==min(coo1$l05)),]
+coo1<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
 threshold0<-coo1$threshold
 t10<-coo1$fpr
 t20<-coo1$fnr
-dis1<-coo1$l05
 dis0<-coo1$closest.topleft
 proc0=auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
 for (i in 1:ncol(x)){
-  glm.x <- glm(y ~ x[,i], family = binomial)
+  glm.x <- glm(y ~ x[,i], family = "binomial")
   matx[1,i]=BIC(glm.x)-bic0
   matx[2,i]=AIC(glm.x)-aic0
   test_prob = predict(glm.x, type = "response")
-  test_roc = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE, levels = c(0,1)
-                 , direction = "<")
-  matx[3,i]=as.numeric(test_roc$auc)
-  matx[4,i]=auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
-  coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
-  coo1$l05=0.5*coo1$fpr+(1-0.5)*coo1$fnr
-  coo1$l03=0.3*coo1$fpr+(1-0.3)*coo1$fnr
-  coo1$l07=0.7*coo1$fpr+(1-0.7)*coo1$fnr
-  coo1<-subset(coo1,coo1$sensitivity>=2/3)
+  test_roc = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE,      levels = c(0,1), direction = "<", ci=TRUE) 
+  test_proc = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE, levels = c(0,1)
+                 , direction = "<", ci=TRUE,
+                 partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
+  test_roc1 = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE,      levels = c(0,1), 
+                  direction = "<", ci=FALSE) 
+  test_proc1 = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE, levels = c(0,1)
+                  , direction = "<", ci=FALSE,
+                  partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
   
+  
+  matx[3,i]=as.numeric(test_roc1$auc)
+  matx[4,i]=auc(test_proc1, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
+
+  coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
+  coo1<-subset(coo1,coo1$sensitivity>=2/3)
+
+#  ci.thresholds(test_roc)
+#  ci.coords(test_roc,x, input='se',
+#  ret=c('threshold','fpr','fnr','c'))
+
   coo2<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
   matx[6:9,i]=as.numeric(coo2[1,c(2:5)])
   dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
@@ -347,46 +356,45 @@ for (i in 1:ncol(x)){
   minabs<-abs(dfy$test_prob-thresh)
   dfy<-cbind(dfy,minabs)
   dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
-  matx[5,i]=dfy[1,3]
-  
-  
-  coo2<-coo1[which(coo1$l05==min(coo1$l05)),]
-  matx[11:14,i]=as.numeric(coo2[1,c(2:4,6)])
-  dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
-  thresh<-matx[11,i]
-  minabs<-abs(dfy$test_prob-thresh)
-  dfy<-cbind(dfy,minabs)
-  dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
-  matx[10,i]=dfy[1,3]
-  
-  coo2<-coo1[which(coo1$l03==min(coo1$l03)),]
-  matx[16:19,i]=as.numeric(coo2[1,c(2:4,7)])
-  dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
-  thresh<-matx[16,i]
-  minabs<-abs(dfy$test_prob-thresh)
-  dfy<-cbind(dfy,minabs)
-  dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
-  matx[15,i]=dfy[1,3]
-  
-  coo2<-coo1[which(coo1$l07==min(coo1$l07)),]
-  matx[21:24,i]=as.numeric(coo2[1,c(2:4,8)])
-  dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
-  thresh<-matx[21,i]
-  minabs<-abs(dfy$test_prob-thresh)
-  dfy<-cbind(dfy,minabs)
-  dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
-  matx[20,i]=dfy[1,3]
+  matx[5,i]=dfy[1,3]  
+  test_roc_auc_ci = as.numeric(ci.auc(test_roc))
+  matx[10,i]=(test_roc_auc_ci[3]-test_roc_auc_ci[1])/3.92
+  test_roc_auc_ci = as.numeric(ci.auc(test_proc))
+  matx[11,i]=(test_roc_auc_ci[3]-test_roc_auc_ci[1])/3.92
+  df_ci = ci.thresholds(test_proc)
+  df_ci1 = data.frame()
+  df_ci1 <- rbind(df_ci1, attributes(df_ci)$thresholds,
+                      (df_ci$sensitivity[,1]),
+                        (df_ci$sensitivity[,3]),
+                        (df_ci$specificity[,1]), 
+                        (df_ci$specificity[,3]))
+  df_ci1 <- t(df_ci1)
+  df_ci1 <- as.data.frame(df_ci1)
+  rownames(df_ci1) <- NULL
+  colnames(df_ci1)<-c("threshold","se.low","se.high","sp.low","sp.high")
+  df_ci1$std.TypeIIError<-(df_ci1$se.high - df_ci1$se.low)/3.92
+  df_ci1$std.TypeIError<-(df_ci1$sp.high - df_ci1$sp.low)/3.92
+  df_ci1$TypeII.high<-(1 - df_ci1$se.low) 
+  df_ci1$TypeII.low<-(1 - df_ci1$se.high) 
+  df_ci1$TypeI.high<-(1 - df_ci1$sp.low)  
+  df_ci1$TypeI.low<-(1 - df_ci1$sp.high)  
+  df_ci1$ctl.low = df_ci1$TypeII.low^2+df_ci1$TypeI.low^2
+  df_ci1$ctl.high = df_ci1$TypeII.high^2+df_ci1$TypeI.high^2
+  df_ci1$std.ctl = (df_ci1$ctl.high-df_ci1$ctl.low)/3.92
+  df_ci1<-df_ci1[,c("threshold", "std.TypeIError", "std.TypeIIError", "std.ctl")]
+  minabs<-abs(df_ci1$threshold-thresh)
+  df_ci1<-cbind(df_ci1,minabs)
+  df_ci1<-df_ci1[which(df_ci1$minabs==min(df_ci1$minabs)),]
+  matx[12:14,i]=t(df_ci1[1,2:4])  
 }
 matx<-t(matx)
 matx<-as.data.frame(matx)
 matx<-matx %>% arrange(desc(matx[,4]))
-colnames(matx)<-c("BIC","AIC","AUC","psAUC",
-                  "c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function",
-                  "c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function",
-                  "c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function",
-                  "c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function")
+colnames(matx)<-c("BIC","AIC",
+                "AUC","psAUC","c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function",
+                "Std.AUC","Std.psAUC","Std.Type I","Std.Type II","Std.Loss Function")
 matx<-matx[,-which(names(matx)=="r.Threshold")]
-matx<-rbind(c(0,0,roc0,proc0,c.thresh0,t10,t20,dis0,c.thresh0,t10,t20,dis1,c.thresh0,t10,t20,dis1,c.thresh0,t10,t20,dis1),matx)
+matx<-rbind(c(0,0,roc0,proc0,c.thresh0,t10,t20,dis0, 0, 0, 0, 0, 0),matx)
 rownames(matx)[1]<-"null"
 matx<-cbind(as.matrix(rownames(matx)),matx)
 colnames(matx)[1]<-"Cycles"
@@ -395,7 +403,140 @@ filepath=sprintf("../Data/Output/Modelcomparison_512_weighted_%s.csv",names(coun
 write.table(matx, filepath, sep=',', row.names=FALSE, col.names=TRUE)
 }
 
+# Reference: DeLong
 
+
+
+
+
+####-------####
+#### Out of sample forececast ####
+#### K-fold cross validation ####
+
+#Reference: Alessi
+
+library(caret)
+library(MLeval)
+library(rsample)
+library(purrr)
+library(tidyverse)
+
+#Code for k-fold cross validation
+
+for (j in 1:length(countrylist)){
+df1 <-df0[grepl(paste(countrylist[[j]], collapse="|"), df0$ID),]
+  
+df1<-na.omit(df1)
+y=df1$crisis
+x=df1[-c(1:3)]
+#dfx<- df1[,-which(names(df)=="date")]
+
+
+
+matx=matrix(NA,12,ncol(x))
+colnames(matx)<-names(x)
+#matx<-rbind(t(as.matrix(names(x))),matx)
+glm.x <- glm(y ~ 1, family = "binomial")
+test_prob = predict(glm.x, type = "response")
+test_roc = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE, levels = c(0,1)
+               , direction = "<")
+roc0=as.numeric(test_roc$auc)
+c.thresh0<-NA
+coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
+coo1<-subset(coo1,coo1$sensitivity>=2/3)
+coo1<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
+threshold0<-coo1$threshold
+t10<-coo1$fpr
+t20<-coo1$fnr
+dis0<-coo1$closest.topleft
+proc0=auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
+
+
+for (i in 1:ncol(x)){
+#y=df1$crisis
+df2=df1[,-c(1:2)]
+#df2<-df1
+
+df2$selectedCycle <-  df2[,i+1]
+#df2$ID <- as.factor(df2$ID)
+cvfun2 <- function(split, ...){
+  mod <- glm(crisis ~ selectedCycle,  data=analysis(split), family="binomial")
+  fit <- predict(mod, newdata=assessment(split), type="response")
+  data.frame(fit = fit, 
+  y = model.response(model.frame(formula(mod), data=assessment(split))),
+  x = (model.frame(formula(mod), data=assessment(split)))[,2]
+  )
+}
+
+
+aucfunc <- function(y, fit, x, ...){
+  matx=matrix(NA,14,1)
+  test_roc = roc(y ~ fit, plot = FALSE, print.auc = FALSE, levels = c(0,1), direction = "<", ci=FALSE) 
+  test_proc = roc(y ~ fit, plot = FALSE, print.auc = FALSE, levels = c(0,1)
+                 , direction = "<", ci=FALSE,
+                 partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
+  matx[1]=0
+  matx[2]=0
+  
+  matx[3]=as.numeric(test_roc$auc)
+  matx[4]=auc(test_proc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
+  
+  coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
+  coo1<-subset(coo1,coo1$sensitivity>=2/3)
+  
+  coo2<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
+  matx[6:9]=as.numeric(coo2[1,c(2:5)])
+  dfy<-as.data.frame(cbind(y,fit,x))
+  thresh<-matx[6]
+  minabs<-abs(dfy$fit-thresh)
+  dfy<-cbind(dfy,minabs)
+  dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
+  matx[5]=dfy[1,3]  
+  
+  df<-data.frame(AUC=matx[3], pAUC=matx[4], c.Thres=matx[5],  
+  TypeI=matx[7], TypeII=matx[8], Loss=matx[9])
+  return(df)
+}
+
+
+cv_out <- vfold_cv(data=df2, v=3, repeats = 10) %>% 
+    mutate(fit = map(splits, cvfun2)) %>% 
+    unnest(fit) %>% 
+    group_by(id) %>%
+    summarise(aucfunc(y,fit, x)) %>%
+    as.data.frame()
+
+cv_out <- cv_out[,-c(1)]
+matx[1:6,i] = apply(cv_out, 2, mean)
+matx[7:12,i] = apply(cv_out, 2, sd)
+}
+matx<-t(matx)
+matx<-as.data.frame(matx)
+matx<-matx %>% arrange(desc(matx[,2]))
+colnames(matx)<-c("AUC","psAUC","c.Threshold","Type I","Type II","Policy Loss Function",
+                "Std.AUC","Std.psAUC","std.cThreshold","Std.Type I","Std.Type II","Std.Loss Function")
+#matx<-matx[,-which(names(matx)=="r.Threshold")]
+matx<-rbind(c(roc0,proc0,c.thresh0,t10,t20,dis0, 0, 0, 0, 0, 0, 0),matx)
+rownames(matx)[1]<-"null"
+matx<-cbind(as.matrix(rownames(matx)),matx)
+colnames(matx)[1]<-"Cycles"
+matx[["Cycles"]][which(matx$Cycles=="weightedcycle")]="1_sided weighted_cycle"
+filepath=sprintf("../Data/Output/CV_Modelcomparison_512_weighted_%s.csv",names(countrylist)[j])
+write.table(matx, filepath, sep=',', row.names=FALSE, col.names=TRUE)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+### Plot time series of weights
 
 # Plot time series of weights
 library(ggplot2)

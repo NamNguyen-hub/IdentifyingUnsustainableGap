@@ -1,17 +1,18 @@
 # EMPIRICAL MODEL
 
-## Credit gaps creation
+## Credit gaps decompositions
 
 \begin{align}
 	100*\frac{Credit}{GDP} &= y_t = \tau_{yt} + c_{yt}
 \end{align}
 
-- We created 90 candidate one-sided credit gap measurements based on the literature.
-  + Once a country has more than 15 years of credit measurement available, we start storing its one-sided credit gap values onward.
-  
+We created 90 candidate one-sided credit gap measurements based on the literature. Once a country has more than 15 years of credit measurement available, we start storing its one-sided credit gap values onward. Our decomposition methods include one sided Hodrick-Prescott filter, Hamilton filter (panel and non-panel setting), Moving Average, Structural Time-series model, linear, quadratic and polynomial decompositions, all are decomposed with full sample, rolling 15 years and 20 years rolling window settings.
+
+
+
 ## Early Warning Indicator - Logistic regression:
 
-\begin{align}
+\begin{align}****
   pre.crisis_{ti} \sim credit.gap_{tij}
 \end{align}
 

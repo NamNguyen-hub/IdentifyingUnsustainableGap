@@ -13,6 +13,6 @@ bibliography: "/Users/namnguyen/syncthing/ZoteroSync/Library/My Library.bib"
 csl: "/Users/namnguyen/syncthing/ZoteroSync/Library/apa-no-doi-no-issue.csl"
 link-citations: yes
 author: "Nam Nguyen"
-date: 'June 06, 2022'
+date: 'July 20, 2022'
 abstract: ''
 ---

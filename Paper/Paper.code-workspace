@@ -7,5 +7,17 @@
 			"path": ".."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"grammarly.selectors": [
+			{
+				"language": "rmarkdown",
+				"scheme": "file",
+				"pattern": "Paper/4_Empirical_Results.Rmd"
+			},
+			{
+				"language": "rmarkdown",
+				"scheme": "file"
+			}
+		]
+	}
 }

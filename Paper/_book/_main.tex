@@ -24,14 +24,6 @@
   \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Identify Sustainable Credit Gap},
-  pdfauthor={Nam Nguyen},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{longtable,booktabs,array}
 \usepackage{calc} % for calculating minipage widths
@@ -84,10 +76,18 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Identify Sustainable Credit Gap},
+  pdfauthor={Nam Nguyen},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
 
 \title{Identify Sustainable Credit Gap}
 \author{Nam Nguyen}
-\date{June 06, 2022}
+\date{July 20, 2022}
 
 \begin{document}
 \maketitle
@@ -149,29 +149,19 @@ till 2017:Q4. We will also omit periods of countries with shorter measurement of
 \hypertarget{empirical-model}{%
 \section{EMPIRICAL MODEL}\label{empirical-model}}
 
-\hypertarget{credit-gaps-creation}{%
-\subsection{Credit gaps creation}\label{credit-gaps-creation}}
+\hypertarget{credit-gaps-decompositions}{%
+\subsection{Credit gaps decompositions}\label{credit-gaps-decompositions}}
 
 \begin{align}
     100*\frac{Credit}{GDP} &= y_t = \tau_{yt} + c_{yt}
 \end{align}
 
-\begin{itemize}
-\tightlist
-\item
-  We created 90 candidate one-sided credit gap measurements based on the literature.
-
-  \begin{itemize}
-  \tightlist
-  \item
-    Once a country has more than 15 years of credit measurement available, we start storing its one-sided credit gap values onward.
-  \end{itemize}
-\end{itemize}
+We created 90 candidate one-sided credit gap measurements based on the literature. Once a country has more than 15 years of credit measurement available, we start storing its one-sided credit gap values onward. Our decomposition methods include one sided Hodrick-Prescott filter, Hamilton filter (panel and non-panel setting), Moving Average, Structural Time-series model, linear, quadratic and polynomial decompositions, all are decomposed with full sample, rolling 15 years and 20 years rolling window settings.
 
 \hypertarget{early-warning-indicator---logistic-regression}{%
 \subsection{Early Warning Indicator - Logistic regression:}\label{early-warning-indicator---logistic-regression}}
 
-\begin{align}
+\begin{align}****
   pre.crisis_{ti} \sim credit.gap_{tij}
 \end{align}
 
@@ -528,10 +518,7 @@ Weights are restricted to be positive to ensure stability
 \begin{center}\includegraphics[width=1\linewidth]{../Data/Output/Graphs/Weights_series} \end{center}
 
 \hypertarget{empirical-results}{%
-\section{EMPIRICAL RESULTS}\label{empirical-results}}
-
-\hypertarget{empirical-results-1}{%
-\section{Empirical Results}\label{empirical-results-1}}
+\section{Empirical Results}\label{empirical-results}}
 
 \hypertarget{comparing-performance-of-weighted-gap---full-sample}{%
 \subsection{Comparing performance of weighted gap - Full Sample}\label{comparing-performance-of-weighted-gap---full-sample}}

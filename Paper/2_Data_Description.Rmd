@@ -12,3 +12,4 @@ While the credit data is available until 2021:Q3, our systemic crisis data stopp
 till 2017:Q4. We will also omit periods of countries with shorter measurement of credit.
 
 **Insert descriptive statistics table here**
+

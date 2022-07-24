@@ -1,11 +1,10 @@
 # Collect Data
 
 ## Set up
-rm(list=ls())
+rm(list = ls())
 
 #1. Parameter Setup
 #https://www.bis.org/statistics/full_data_sets.htm
-
 #----
 
 # Libraries
@@ -21,12 +20,12 @@ library(rio)
 library(stringr)
 library(readxl)
 
-enddate="2017-10-01"
+enddate = "2017-10-01"
 
 # create a temporary directory
 td <- tempdir()
 # create a temporary file
-tf <- tempfile(tmpdir=td, fileext=".zip")
+tf <- tempfile(tmpdir = td, fileext = ".zip")
 # download file from internet into temporary location
 download.file("https://www.bis.org/statistics/full_credit_gap_csv.zip", tf)
 # list zip archive
@@ -53,7 +52,8 @@ latest_date = file_names$Date[1]
 
 ## Process data
 rates_plot2 <- data %>%
-  filter(.data[["Credit gap data type"]] == "A:Credit-to-GDP ratios (actual data)")
+  filter(.data[["Credit gap data type"]]
+  == "A:Credit-to-GDP ratios (actual data)")
   #filter(grepl(clist2, BORROWERS_CTY))%>%
 
 rates_plot3 <- data %>%
@@ -105,7 +105,7 @@ clist1 <- names(which(colSums(is.na(df1))>0))
 #df1 <- select(df1,-clist1) # 21 countries remains (CA,AU,ZA does not have systemic crisis)
 clist1 <- colnames(df1)
 #clist1 <- clist1[-c(which(clist1=="ZA:South Africa"))]
-df1 <- df[,clist1]
+df1 <- df[, clist1]
 
 
 name11<- str_sub(names(df1[-ncol(df1)]), end=2)

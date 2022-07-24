@@ -1,6 +1,3 @@
-# EMPIRICAL RESULTS
-
-
 # Empirical Results
 ## Comparing performance of weighted gap - Full Sample
 

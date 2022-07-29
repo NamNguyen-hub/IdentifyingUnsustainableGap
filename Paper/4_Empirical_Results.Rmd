@@ -1,52 +1,41 @@
-# Empirical Results
-## Comparing performance of weighted gap - Full Sample
 
-```{r varcompfull, echo=FALSE, warning=FALSE, message=FALSE}
-options(kableExtra.latex.load_packages = FALSE)
-options(knitr.table.format = "pandoc")
+```{r weightgraph, echo=FALSE, out.width='100%', fig.align="center", fig.cap="One sided weights graph"}
+knitr::include_graphics('../Data/Output/Graphs/Weights_combined.pdf')
+```
+
+# Empirical Results {#empirical-results}
+
+## One sided weights stacked time series graph {#weight-graphs}
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Load libraries
 library('kableExtra')
 library(dplyr)
 library(knitr)
-#library(rstudioapi)
-#setwd(dirname(getActiveDocumentContext()$path))
-#getwd()
-
-filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_full.csv'
-df<-read.csv(filepath, sep = ",", header=TRUE)
-
-name1<- df[,1]
-name1<- gsub("_", ".", name1)
-name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
-df[,1]<-name1
-
-df<-df[,-c(10:ncol(df))]
-
-#options(knitr.kable.NA = '')
-
-kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
-      , row.names = FALSE) %>%
-  kable_paper("striped") %>%
-  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
-  #footnote(general="") %>%
-  kable_styling(latex_options=c("scale_down","HOLD_position")) %>%
-  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
-  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)#%>%
-  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
-  #gsub(".centering", "", ., perl = TRUE)
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+options(knitr.kable.NA = '')
+opts_chunk$set(fig.pos="H")
 ```
 
 
-## Comparing performance of weighted gap as an EWI - AE
+In Figure \@ref(fig:weightgraph), we see that for the first 15-18 years of the data sample, the parsimony (c.poly3) filter's weight dominated all the other filters. However, after about 20 years, the (c.poly3) filter lost all of its weight. This could be explained by the lack of initial data, leading to poorer performance of other credit gap measurements.
+
+However, as more data were updated, the dynamics of the weights changed significantly. During the early 1990s, Hodrick-Prescott filters' weights overshadowed others, then Beveridge-Nelson, and the Structural Time-Series model did. As the Great Financial Crisis happened, the Hamilton filter in a panel setting gained weight. And lastly, at the end of the crisis data period 2017:Q4, we have 3 Beveridge-Nelson filters (c.bn2_r20, c.bn2_r15 and c.bn3_r15) and 1 Hamilton filter (c.hamiolton28_panelr20) sharing nearly equal weights. To apply our findings in our limited sample, we fixed the weights for 2017:Q4 at constant and extrapolated the weights to 2021:Q3, the end of this paper's credit data availability.
+
+
+<!--[Talk about weight changes over the years below]
+[How we extrapolated from 2018:Q1 to 2021:Q3]-->
+
+
+## Model Fitness Results {#model-fit}
+
+
+<!--[Discuss bootstrapping method details, and other methodological details here.]-->
+
+The standard deviation for each estimate is deducted from a 95% confidence interval of the bootstrapping results using 2000 stratified bootstrap replicates.^[We estimate partial ROC and confidence interval using the R package "pROC" by @robin_proc_2011 whose methodology is based on @carpenter_bootstrap_2000]
 
 ```{r varcompAE, echo=FALSE, warning=FALSE, message=FALSE}
-options(kableExtra.latex.load_packages = FALSE)
-options(knitr.table.format = "pandoc")
-library('kableExtra')
-library(dplyr)
-library(knitr)
-#library(rstudioapi)
-#setwd(dirname(getActiveDocumentContext()$path))
-#getwd()
 
 filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_AE.csv'
 df<-read.csv(filepath, sep = ",", header=TRUE)
@@ -56,32 +45,45 @@ name1<- gsub("_", ".", name1)
 name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
 df[,1]<-name1
 
-df<-df[,-c(10:ncol(df))]
-#options(knitr.kable.NA = '')
+df<-df[,-c(15:ncol(df))]
+df2<- as.data.frame(matrix(NA,2*nrow(df),9))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:9)]<-df[i,c(1:9)]
+  df2[2*(i-1)+2,c(4,5,7,8,9)]<-df[i,c(10:14)]
+}
 
-kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+colnames(df2)<-c("Cycle","BIC","AIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+df2[ df2 == "(0.0000)" ] <- NA
+
+
+df2 <- df2[-c(41:nrow(df2)),]
+
+kbl(df2, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("", "\\addlinespace"), caption = "Credit gaps performance as EWIs - Advanced Economies"
       , row.names = FALSE) %>%
-  kable_paper("striped") %>%
   #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
-  #footnote(general="") %>%
-  kable_styling(latex_options=c("scale_down","HOLD_position")) %>%
+  add_footnote("The standard deviation for each estimates are deducted from 95% confidence interval of the bootstrapping results using 2000 stratified bootstrap replicates.", notation="none") %>%
+  kable_styling(latex_options=c("striped","scale_down", "HOLD_position")) %>%
+  kable_paper(c("striped")) %>%   
   column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
-  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)#%>%
-  #(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  row_spec(c(which(df2$Cycle=="1.sided weighted.cycle"),which(df2$Cycle=="1.sided weighted.cycle")+1,which(df2$Cycle=="BIS Basel gap"),which(df2$Cycle=="BIS Basel gap")+1),  bold=TRUE)#%>%
+  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
   #gsub(".centering", "", ., perl = TRUE)
 ```
 
-## Comparing performance of weighted gap as an EWI - EME
-
 ```{r varcompEME, echo=FALSE, warning=FALSE, message=FALSE}
-options(kableExtra.latex.load_packages = FALSE)
-options(knitr.table.format = "pandoc")
-library('kableExtra')
-library(dplyr)
-library(knitr)
-#library(rstudioapi)
-#setwd(dirname(getActiveDocumentContext()$path))
-#getwd()
 
 filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_EME.csv'
 df<-read.csv(filepath, sep = ",", header=TRUE)
@@ -91,29 +93,305 @@ name1<- gsub("_", ".", name1)
 name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
 df[,1]<-name1
 
-df<-df[,-c(10:ncol(df))]
-#options(knitr.kable.NA = '')
+df<-df[,-c(15:ncol(df))]
+df2<- as.data.frame(matrix(NA,2*nrow(df),9))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:9)]<-df[i,c(1:9)]
+  df2[2*(i-1)+2,c(4,5,7,8,9)]<-df[i,c(10:14)]
+}
 
-kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
+colnames(df2)<-c("Cycle","BIC","AIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+df2[ df2 == "(0.0000)" ] <- NA
+
+df2 <- df2[-c(41:nrow(df2)),]
+
+options(knitr.kable.NA = '')
+
+kbl(df2, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("", "\\addlinespace"), caption = "Credit gaps performance as EWIs - Emerging Market Economies"
       , row.names = FALSE) %>%
-  kable_paper("striped") %>%
   #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
-  #footnote(general="") %>%
-  kable_styling(latex_options=c("scale_down","HOLD_position")) %>%
+  add_footnote("The standard deviation for each estimates are deducted from 95% confidence interval of the bootstrapping results using 2000 stratified bootstrap replicates.", notation="none") %>%
+  kable_styling(latex_options=c("striped","scale_down", "HOLD_position")) %>%
+  kable_paper(c("striped")) %>%   
   column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
-  row_spec(c(which(df$Cycle=="1.sided weighted.cycle"),which(df$Cycle=="BIS Basel gap")),  bold=TRUE)
+  row_spec(c(which(df2$Cycle=="1.sided weighted.cycle"),which(df2$Cycle=="1.sided weighted.cycle")+1,which(df2$Cycle=="BIS Basel gap"),which(df2$Cycle=="BIS Basel gap")+1),  bold=TRUE)#%>%
   #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
   #gsub(".centering", "", ., perl = TRUE)
 ```
 
-## Plot weighted gap against BIS gap
+```{r varcompfull, echo=FALSE, warning=FALSE, message=FALSE}
 
-```{r wUS, echo=FALSE, out.width='100%', fig.align="center"}
-knitr::include_graphics('../Data/Output/Graphs/Weighted_credit_gap_US.pdf')
+filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_full.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(15:ncol(df))]
+df2<- as.data.frame(matrix(NA,2*nrow(df),9))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:9)]<-df[i,c(1:9)]
+  df2[2*(i-1)+2,c(4,5,7,8,9)]<-df[i,c(10:14)]
+}
+
+colnames(df2)<-c("Cycle","BIC","AIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+df2[ df2 == "(0.0000)" ] <- NA
+
+df2 <- df2[-c(41:nrow(df2)),]
+
+kbl(df2, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("", "\\addlinespace"), caption="Credit gaps performance as EWIs comparison - Full sample"
+      , row.names = FALSE) %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  add_footnote("The standard deviation for each estimates are deducted from 95% confidence interval of the bootstrapping results using 2000 stratified bootstrap replicates.", notation="none") %>%
+  kable_styling(latex_options=c("striped","scale_down", "HOLD_position")) %>%
+  kable_paper(c("striped")) %>%   
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df2$Cycle=="1.sided weighted.cycle"),which(df2$Cycle=="1.sided weighted.cycle")+1,which(df2$Cycle=="BIS Basel gap"),which(df2$Cycle=="BIS Basel gap")+1),  bold=TRUE)#%>%
+  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  #gsub(".centering", "", ., perl = TRUE)
 ```
 
-## Plot weighted gap against BIS gap
+### Performance Metrics
+Along with the results from Table \@ref(tab:varcompAE) - \@ref(tab:varcompfull), we will discuss psAUC as a performance measurement criteria of a credit gap series as an EWI. 
 
-```{r wUK, echo=FALSE, out.width='100%', fig.align="center"}
-knitr::include_graphics('../Data/Output/Graphs/Weighted_credit_gap_UK.pdf')
+Firstly, the psAUC metric overall gives a consistent signal about the quality of the credit gap decomposition filters. A filter with a higher psAUC value, in general, will have a higher quality set of possible policy loss function values to optimize. The standard deviation values of the weighted cycle metrics are also comparable to the other gap measurements.
+
+In some scenarios, psAUC can be a deciding factor if policymakers are indifferent about the AUC value of a filter. In Table \@ref(tab:varcompfull), the Moving Average (c.ma) and Hamilton 13th lag using panel setting (c.hamilton13.panel) filters have the same AUC values. While the BIC and AIC values, the overall linearized binary logistic regression fitness criteria, would favor (c.hamilton13.panel) filter. The psAUC indicates otherwise. If we only focus on the region where FPR or the optimized threshold's predictive power is at least 2/3, the minimized policy loss function would favor c.ma. 
+
+However, there are also instances where psAUC failed to be a single criterion for determining the performance of a filter. In Table \@ref(tab:varcompfull), the 4th-degree polynomial filter with a rolling sample of 20 years (c.poly4.r20) have a higher psAUC value than the BIS Basel gap. However, all of (c.poly4.r20) filter's other metrics have less preferred values than the BIS Basel gap. As a result, we will deem (c.poly4.r20) less preferred than the BIS Basel gap. 
+
+In conclusion, even though psAUC is an overall good measurement for a specific case of binary regression model, where Type II errors are costlier than Type I errors, we focus our optimized threshold on the region where Type II errors are less than 1/3. We still have to use it in conjunction with other criteria such as BIC, AUC, and loss function to determine the performance of a filter. Using it alone will not give biased results of the model performance.
+
+
+### Weighted gap and other gaps performance comparison
+
+In this part, we will discuss the performance of the weighted credit gap series as an EWI and compare it with other selected series.
+
+From Table \@ref(tab:varcompAE) and Table \@ref(tab:varcompfull) regarding Advanced Economies and full sample results, the weighted credit cycle outperformed other cycles in AUC, psAUC, and Policy Loss function values. Specifically, while maintaining approximately the same optimized threshold as the BIS Basel gap, the weighted credit cycle can achieve lower Type I and II error rates than the BIS Basel gap in all samples.
+
+The findings in Advanced Economies and full sample results also align with the literature findings. Hamilton, moving average filters with optimized parameters perform well, which agrees with the findings in @beltran_optimizing_2021. @drehmann_which_2021 proposed using Hamilton filter in a panel setting with fixed sloping coefficients across countries, and @galan_measuring_2019 found rolling sample with 15 and 20 years window helps with improvement of the early indicator performance.
+
+Across the three tables, optimizing and changing parameters on the one-sided HP filter does not improve its performance over the BIS Basel gap. Contrary to the finding in @beltran_optimizing_2021 and @galan_measuring_2019. The author did not use a full sample analysis but by individual countries. The structural time series filter proposed in @beltran_optimizing_2021 also did not perform better than the BIS Basel gap. 
+
+Unsurprisingly, parsimony filters such as linear and polynomial does not perform well in AE and full sample. However, they can outperform other well-studied gaps in EMEs. This confirmed our finding in the previous section \@ref(weight-graphs) that when data are limited, and the market economies are not well established, parsimony filters outperformed other complex filters.
+
+We want to reiterate the importance of avoiding the pitfall of using a single criterion for selecting models, even for the psAUC metric. In Table \@ref(tab:varcompEME). The (c.poly3) filter has a higher psAUC value than its next filter on the table (c.bn2.r15). However, because (c.poly3)'s other metrics have lower quality than its counterpart, the policy loss function, Type I and II errors rates are higher for (c.poly3).
+
+Last but not least, the emerging market economies (EMEs) have proven challenging to predict crises using the credit gap as EWI because of their more limited sample sizes and less established financial systems. Both @beltran_optimizing_2021 and @drehmann_which_2021 found that credit gap-based EWIs do not perform well in emerging market economies. In this paper, we found evidence that adding Beveridge-Nelson decomposition filters to the model selection process improved our model performance for the EMEs, specifically the (c.bn3.r15) Beveridge-Nelson with smoothing parameter 3 and 15 years rolling sample filter. Later graphical analysis in this paper on EMEs will include (c.bn3.r15) filter as another reference. Another Beveridge-Nelson filter with specific features such as (c.bn6.r20) also performs well in both AE and full samples.
+
+<!--
+(Reconfirm findings in other papers)
+  (Compare results of certain papers and also compare the results of the three regions)
+  (Compare results of hybrid (rolling and panel) and how that creates an even better indicator)
+  (However, changing parameter for the one sided hp filter does not seem to prove helpful)
+(Discuss outliers and pitfall of using a single criterion for selecting models)
+(Establish superiority of the weighted gap)
+(Establish superiority of the new EWI criteria)
+(BN gap works better than other gaps for EME)
+-->
+
+
+## Out of sample forecast {#cross-validation}
+
+<!--(Discuss cross validation methods)-->
+We followed @alessi_identifying_2018 in implementing k-fold leave-one-out cross-validation to perform an out-of-sample forecast analysis. To assess the out-of-sample predictive power of the credit gaps, we perform a 3-fold cross-validation, in which the data is randomly split into three partitions. For each partition, the model is estimated using the other two groups. The resulting estimated parameter is then used to predict the dependent variable in the unused group. We then compute psAUCs and other metrics values and obtain the average metrics and their standard deviations from 10 repeats.
+
+```{r cvvarcompAE, echo=FALSE, warning=FALSE, message=FALSE}
+
+filepath='../Data/Output/CV_Modelcomparison_512_weighted_countrylist_AE.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(3,10:13,15,22:25)]
+df2<- as.data.frame(matrix(NA,2*nrow(df),8))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:8)]<-df[i,c(1:8)]
+  df2[2*(i-1)+2,c(2:8)]<-df[i,c(9:15)]
+}
+
+colnames(df2)<-c("Cycle","BIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+df2[ df2 == "(0.0000)" ] <- NA
+
+df2 <- df2[-c(41:nrow(df2)),]
+
+kbl(df2, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("", "\\addlinespace"), caption = "Credit gaps performance as EWIs - Out of sample prediction - AE"
+      , row.names = FALSE) %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  footnote(general="3-fold cross-validation results. Standard errors are reported in parentheses.") %>%
+  kable_styling(latex_options=c("striped","scale_down", "HOLD_position")) %>%
+  kable_paper(c("striped")) %>%   
+  column_spec(4, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df2$Cycle=="1.sided weighted.cycle"),which(df2$Cycle=="1.sided weighted.cycle")+1,which(df2$Cycle=="BIS Basel gap"),which(df2$Cycle=="BIS Basel gap")+1),  bold=TRUE)#%>%
+  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  #gsub(".centering", "", ., perl = TRUE)
 ```
+
+
+```{r cvvarcompEME, echo=FALSE, warning=FALSE, message=FALSE}
+
+filepath='../Data/Output/CV_Modelcomparison_512_weighted_countrylist_EME.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(3,10:13,15,22:25)]
+df2<- as.data.frame(matrix(NA,2*nrow(df),8))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:8)]<-df[i,c(1:8)]
+  df2[2*(i-1)+2,c(2:8)]<-df[i,c(9:15)]
+}
+
+colnames(df2)<-c("Cycle","BIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+df2[ df2 == "(0.0000)" ] <- NA
+
+df2 <- df2[-c(41:nrow(df2)),]
+
+kbl(df2, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("", "\\addlinespace"), caption = "Credit gaps performance as EWIs - Out of sample prediction - EME" 
+      , row.names = FALSE) %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  footnote(general="3-fold cross-validation results. Standard errors are reported in parentheses.") %>%
+  kable_styling(latex_options=c("striped","scale_down", "HOLD_position")) %>%
+  kable_paper(c("striped")) %>%   
+  column_spec(4, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df2$Cycle=="1.sided weighted.cycle"),which(df2$Cycle=="1.sided weighted.cycle")+1,which(df2$Cycle=="BIS Basel gap"),which(df2$Cycle=="BIS Basel gap")+1),  bold=TRUE)#%>%
+  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  #gsub(".centering", "", ., perl = TRUE)
+```
+
+
+```{r cvvarcompfull, echo=FALSE, warning=FALSE, message=FALSE}
+
+filepath='../Data/Output/CV_Modelcomparison_512_weighted_countrylist_full.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(3,10:13,15,22:25)]
+df2<- as.data.frame(matrix(NA,2*nrow(df),8))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:8)]<-df[i,c(1:8)]
+  df2[2*(i-1)+2,c(2:8)]<-df[i,c(9:15)]
+}
+
+colnames(df2)<-c("Cycle","BIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+df2[ df2 == "(0.0000)" ] <- NA
+
+
+df2 <- df2[-c(41:nrow(df2)),]
+
+kbl(df2, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("", "\\addlinespace"), caption = "Credit gaps performance as EWIs - Out of sample prediction - Full sample"
+      , row.names = FALSE) %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  footnote(general="3-fold cross-validation results. Standard errors are reported in parentheses.") %>%
+  kable_styling(latex_options=c("striped","scale_down", "HOLD_position")) %>%
+  kable_paper(c("striped")) %>%   
+  column_spec(4, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df2$Cycle=="1.sided weighted.cycle"),which(df2$Cycle=="1.sided weighted.cycle")+1,which(df2$Cycle=="BIS Basel gap"),which(df2$Cycle=="BIS Basel gap")+1),  bold=TRUE)#%>%
+  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  #gsub(".centering", "", ., perl = TRUE)
+```
+
+The overall results of the out-of-sample prediction exercise show similar findings as in the previous subsection \@ref(model-fit) that used bootstrapping method. The ranking of the filters does not change significantly. These results overall affirm the robustness of using credit gaps as EWI models. 
+
+On Table \@ref(tab:cvvarcompAE) regarding the AEs, the weighted cycle has a lower value than the (c.hamilton.panelr15) filter. However, the weighted cycle has a lower loss function value and lower overall Type I and Type II error rates.
+
+Expectedly, for EMEs, on Table \@ref(tab:cvvarcompEME) the parsimony (c.poly3) 3th power polynomial filter dropped its psAUC in out-of-sample prediction context compared to its bootstrapped value on Table \@ref(tab:varcompEME). This could be predicted by its poor metrics such as BIC and Loss Function on the model fitness results in the previous subsection.
+
+Through the two subsections \@ref(model-fit) and \@ref(cross-validation), the model proved to perform well in identifying at-risk periods before a crisis and normal periods of countries in the sample, especially regarding criteria for selecting robust EWI early warning indicators or weighted-averaging between the top candidates for improved model certainty and out-of-sample forecast. With this evidence, We will move our discussion to specific individual countries' analysis in the next section.
+
+<!--
+(Discuss results in the three regions, variance difference too)
+(Reconfirm findings in previous section with the bootstrapping method)
+(Reconfirm findings in other papers)
+
+- (Compare results of certain papers and also compare the results of the three regions)
+
+- (Compare results of hybrid (rolling and panel) and how that creates an even better indicator)
+
+(Establish superiority of the weighted gap)
+
+(Establish superiority of the new EWI criteria)
+
+(BN gap works better than other gaps for EME)-->

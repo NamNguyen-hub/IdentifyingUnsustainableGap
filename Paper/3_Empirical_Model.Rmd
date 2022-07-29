@@ -1,93 +1,164 @@
-# EMPIRICAL MODEL
+# Empirical Methodology {#model}
+## Overview
 
-## Credit gaps decompositions
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Load libraries
+library('kableExtra')
+library(dplyr)
+library(knitr)
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+options(knitr.kable.NA = '')
+```
+
+The total credit series is nonstationary. In order to extract a useful stationary credit signal to use as an early warning indicator for future financial crises, we first decompose the series into a nonstationary trend and a stationary cycle using various popularly studied filters in subsection \@ref(decomp). 
+
+The idea behind using the credit gap as an early warning indicator is that a prolonged period of excessive credit growth could be linked to future financial crises. Therefore, we can use logistic regression to identify pre-crisis periods with unsustainable high credit gap values over a certain threshold.
+
+In subsection \@ref(logistic-regression), we discuss strategies for identifying the dependent variable (pre-crisis periods) and the logistic regression empirical method. In subsection \@ref(metrics) we then discuss the metrics to determine the performance of a credit gap as an early warning indicator EWI model such as BIC, AIC values, Area Under Curve (AUC) of receiver operating characteristic, how we determine a policy loss function, optimize credit gap threshold and estimate the minimized Type I and Type II error rates. We will then propose a novel metric - partial standardized AUC (psAUC) that, when used in conjunction with other metrics, will provide more desirable properties in terms of policy implication and overcome some of the criticism that the traditional AUC metric receives.
+
+This paper aims to overcome model uncertainty when using credit gap filters as an early warning indicator for future financial crises. Since each decomposition filter of the total credit series provides a stationary series that performs qualitatively differently from other filters as an EWI, we propose selecting the best gap candidates and performing model averaging to achieve model stability and improved out-of-sample prediction as proposed in [@raftery_bayesian_1995].
+
+In subsection \@ref(modelselection), we will use the metrics discussed in subsection \@ref(logistic-regression) to select credit gap filters that perform well individually and in combination with other credit gaps. Then in subsection \@ref(model-average), we discuss the theory behind the Bayesian model average method, our model customization to fit our need, and the new metric (psAUC). 
+
+Lastly, in subsection \@ref(weighted-gap-creation), for ease of policy implication, we propose the creation of a crisis-weighted credit gap that would inherit the information and features from the averaged model of 30 other credit gaps, and would perform as well as the averaged model prediction does.
+
+
+<!--[Briefly discuss AUC section here]\
+[Variable selection here]\
+[Model Averaging here]\
+[Weighted credit gap creation here]\-->
+
+## Credit gap decompositions {#decomp}
 
 \begin{align}
-	100*\frac{Credit}{GDP} &= y_t = \tau_{yt} + c_{yt}
+	100*\frac{Credit}{GDP} &= y_it = \tau_{itj} + c_{itj}
 \end{align}
 
-We created 90 candidate one-sided credit gap measurements based on the literature. Once a country has more than 15 years of credit measurement available, we start storing its one-sided credit gap values onward. Our decomposition methods include one sided Hodrick-Prescott filter, Hamilton filter (panel and non-panel setting), Moving Average, Structural Time-series model, linear, quadratic and polynomial decompositions, all are decomposed with full sample, rolling 15 years and 20 years rolling window settings.
 
+We started our variable selection process by creating 90 candidate one-sided credit gap measurements based on the literature.^[List of filters created is can be viewed in Appendix \@ref(filterslist)] The nonstationary Credit to GDP ratio series is decomposed into a nonstationary trend $\tau_{yit}$ and a stationary cycle credit gap $c_{itj}$ components. Once a country has more than 15 years of credit measurement available, we start storing its one-sided credit gap values onward. Our decomposition filter methods include one-sided Hodrick-Prescott, Hamilton (panel and non-panel setting), Moving Average, Structural Time-series model, Beveridge-Nelson, linear, quadratic, and polynomial decompositions. All are decomposed with full sample, rolling 15 years and 20 years rolling window feature when possible.
 
+Apart from the filters that we already introduced in Chapter 3 - "Measuring credit gap" (Equations 3.1 - 3.5), the two additional filters we will use in this chapter are Moving Average, Structural Time-Series model filters that @beltran_optimizing_2021 introduced.^[Refer to their equation representations here in Appendix \@ref(ma-stm-eq)]
 
-## Early Warning Indicator - Logistic regression:
+<!--Todo:
+[List formula references for each decomposition method]\
+[Full list of credit cycle created in appendix]\
+[strength and weakness of each decomposition method if possible]\-->
 
-\begin{align}****
-  pre.crisis_{ti} \sim credit.gap_{tij}
+## Early Warning Indicator - GLM Logistic regression {#logistic-regression}
+
+We begin testing the fitness of the EWI model using credit gap measurements by implementing binary logistic regression. We identify our dependent variable as the periods of 5-12 quarters ahead of a systemic financial crisis. The underlying classification model assumes that the credit to GDP ratio gap will increase sharply as a response to an excessive credit increase due to expansionary monetary policy or a sharp decline in GDP, which is the ratio's denominator. When the credit gap is above a certain threshold for a prolonged period, it signals that the economy is at risk of a future financial crisis. The periods with excessive credit before financial crises will be labeled pre-crisis periods. 
+
+It is also worth pointing out that there is no consensus on setting the periods to label as pre-crisis. The literature labeled pre-crisis periods with various ranges from 1-16 quarters before a crisis. We decided to use a labeling strategy with ideal policy implication properties. It is recommended that macroprudential policy takes more than four quarters to be effective because of policy implementation lag. As a result, a signal telling that the economy will experience a financial crisis in 1-4 quarters has little policy implication. Therefore, we start labeling the pre-crisis periods in the 5th quarter before a systemic crisis. We stop labeling in the 12th quarter before a crisis because implementing counter-cyclical policy too early will be ineffective in lowering the risk of a future crisis and would only exacerbate economic conditions by unnecessary credit tightening.
+
+Equation \@ref(eq:logit) represents the binary logistic regression:
+
+\begin{align} (\#eq:logit)
+  pre.crisis_{it} \sim c_{itj} 
 \end{align}
 
-- $i$ is country indicator. $j$ is credit gap filter type
+In which $i$ is the country indicator, and $j$ is the credit gap filter type. The binary dependent variable $pre.crisis_{it}$ takes values of 1 when the economy is between 5-12 quarters before a systemic financial crisis labeling the periods as "pre-crisis" positive. We discard measurements between 1-4 quarters before a crisis, during, and post-crisis management periods identified in Lo Duca et al. (2017) and Laeven and Valencia (2018). The measurements in these periods are discarded to avoid biased estimation as credit gaps behave erratically during a crisis. 
 
-- where $pre.crisis_{it}=$  1 or 0 
+The indicator is set to 0 at other periods. Additionally, pre-crisis periods of imported crises identified in the dataset are set to 0 since the model aims to capture pre-crisis periods created by a country's excess credit growth, not from exogenous shocks. However, for labeling conformity, we still discard measurements of periods during and post-crisis of these imported crises, as countries experiencing imported crises could implement reactionary monetary policies.
 
-- The pre-crisis indicator is set to 1 when t is between 5-12 quarters before a systemic crisis. 
-	
-- We discard measurements between 1-4 quarters before a crisis, periods during a crisis and post-crisis periods identified in Lo Duca et al. (2017) and Laeven and Valencia (2018). 
-  + The indicator is set to 0 at other periods.
-  + pre-crisis periods of imported crises identified in the dataset are also set to 0. However, we still discard measurements of periods during and post-crisis for imported  crises.
+<!--Todo:
+[elaborate on why the strategy of identifying pre-crisis periods is used this way]\
+[pros and cons]\
+[alternatives]\ (not worth elaborating) (- individual quarters instead of 5-12)
+[easy of use: choice]-->
 
-## AUROC 
-Each logistic regression with a different gap measurement yields a Area Under Curve (AUC) of receiver operating characteristic value. There is an underlying assumption that the higher the AUC value is the better overall performance of a credit gap is as an EWI. 
+## EWI performance metrics {#metrics}
 
-- However, the AUC value received some criticism regarding the area on its lower left corner, where the predictive power of the threshold (TPR) is low.
+### Likelihood values and BIC
+
+The logistic regression model parameters are estimated by maximizing the cross-entropy log-likelihood values. The relationship between the BIC (Bayesian Information Criterion) and likelihood value is expressed in Equation \@ref(eq:BIC-lik). The model selection criterion here is to choose the filter method with a lower BIC value associated with a higher likelihood value and fitness of the general linearized model or a higher degree of freedom by using fewer explanatory variables.
+
+### Area Under the Curve (AUC) of receiver operating characteristic (ROC) 
+
+A receiver operating characteristic (ROC) curve in the EWI literature setting represents True Positive Rate (TPR) and False Positive Rate (FPR) Cartesian coordinates of different credit gap thresholds, which are used as indicators for identifying pre-crisis periods.^[Refer to Figure \@ref(fig:psAUCfig) for illustration] The credit gap thresholds are determined by the logistic regression model predicted response values which range from (0,1) and map increasingly with the credit gap magnitude values.
+
+A logistic model is strictly preferred over another comparable model if all of the coordinates of its ROC curve are closer to the top-left region of the graph, which minimizes FPR and maximizes TPR. However, that is not always the case when we have such a clear-cut difference. Models can have overlapping ROC curves. To simplify the process of model selection in such cases, the area under the curve (AUC) of ROC metric is used.
 
 \begin{align*}
 AUC = \int_0^1 TPR d(FPR)
 \end{align*}
 
-A ROC curve in the EWI setting represents True Positive Rate (TPR) and False Positive Rate (FPR) of different credit gap thresholds indicating a pre-crisis period. The thresholds are determined by the logistic regression predicted probability values.
+Each logistic regression with a different gap measurement yields an Area Under Curve (AUC) of receiver operating characteristic value. There is an underlying assumption that the higher the AUC value is, the better the overall performance of a credit gap is as an EWI since, on average, its ROC curve has coordinates with higher TPR and lower FPR. 
 
-## partial standardised AUROC (psAUROC)
-To overcome the issue of unnecessary information included in the full AUC. An approach to estimate partial AUC was proposed.
+True Positive Rate represents a model's predictive power (P) to identify pre-crisis periods correctly (positive case). $TPR = TP / (TP + FN)$. False Positive Rate represents the Type I error rate that a model misidentifies a calm, normal period (negative case) as a pre-crisis period (positive case). $FPR = FP / (FP + TN)$. Lastly, we discuss the False Negative Rate or the Type II error rate at which a model misidentifies a pre-crisis period (positive case) as a normal calm period (negative case). $FNR = 1 - TPR = FN / (TP + FN)$.^[Our notation of Type I and Type II error follows Beltran (2021) which deviated from previous literature.]
+
+Central planners working with classification problems have dual objectives to minimize Type I and Type II errors. To simplify this problem, a policy loss function with the input of the two error types are used: 
+
+\begin{align} (\#eq:policylossold)
+L_{\theta,\rho}=\alpha TypeI(\theta)+(1-\alpha)TypeII(\theta)
+\end{align}
+
+With $\alpha = 0.5$ by default if policymakers are indifferent about the two types of errors. Here, the model selection criteria would be to select minimized policy loss function with the smallest combination of Type I and Type II error rates. 
+
+A binary logistic regression model with a substantially higher AUC value will have smaller sets of Type I and Type II metrics values. Therefore, its optimized credit gap threshold value that minimizes the policy loss function would represent superior Type I and Type II error rates.
+
+<!--[Talk about Policy Loss Function and TPR, FPR]-->
+However, because the AUC value is an aggregate value representing information of the whole ROC curve, the area on its lower left corner, where the predictive power of the threshold (TPR) is low, and type II error rates are high, is not relevant for policy implications discussion. Before the Great Financial Crisis of 2008, central planners tended to weigh Type I errors more than Type II errors since the cost of misspecifying a financial crisis was not apparent, and a Type I error meant costing the economy unnecessary credit constraints by implementing reactionary policies. However, since 2009, there has been a shift in weighing Type II errors more as the cost of misspecifying a systemic financial crisis became significantly heavier than a Type I error. 
+
+### Partial standardised AUC {#psAUC}
+To overcome the issue of unnecessary information included in the full AUC. An approach to estimate only a partial relevant area under the ROC was proposed in @mcclish_analyzing_1989 and later implemented in the EWI setting by @detken_operationalising_2014. We will also discuss the standardization of the partial AUC metric (psAUC) in Equation \@ref(eq:psAUCeq).
 
 Detken (2014) on partial standardized AUC:
 
->"Instead of considering only the full AUROC (e.g. Drehmann and Juselius, 2014), this paper also presents a partial standardised AUROC (psAUROC) that cuts off the area associated with a preference parameter of $\theta<0.5$."... 
+>"Instead of considering only the full AUROC (e.g. Drehmann and Juselius, 2014), this paper also presents a partial standardized AUROC (psAUROC) that cuts off the area associated with a preference parameter of $\theta<0.5$."... 
 
->"While the psAUROC has been used extensively in the area of medical statistics to assess the performance of a classifier only in specific regions of the ROC curve (e.g. McClish, 1989 and Jiang et al., 1996), it is a new approach in the literature evaluating EWMs"...
+>"While the psAUROC has been used extensively in the area of medical statistics to assess the performance of a classifier only in specific regions of the ROC curve (e.g., McClish, 1989 and Jiang et al., 1996), it is a new approach in the literature evaluating EWMs"...
 
 >"The results reported in this paper show that the psAUROC can reveal useful additional information as long as the partial area does not become too restricted."
 
-## pAUROC (or pAUC)
+@detken_operationalising_2014 proposed cutting off the area representing the preference response parameter in a multivariate regression setting. However, this application does not directly translate to a univariate credit gap model. More relevantly, [@beltran_optimizing_2021] constrained the policy loss function to regions where TPR $\ge 2/3$ or Type II error rate $< 1/3$. They then estimated the policy loss function value at different points on the partial ROC curve by assigning different policy preference parameter values $\alpha$.
 
-Beltran (2021) constrainted the policy loss function to TPR $\ge 2/3$ or Type II error rate $< 1/3$. They then estimated the policy loss function value at different points on the ROC curve by assigning different policy preferences $\alpha$.
+To merge these two ideas above and to solve the uncertainty issue of having to estimate policy loss function at different policy preference parameter values to determine model performance, we propose to restrict the consideration of the ROC curve to TPR $\ge 2/3$, then estimate the partial standardize psAUC of the restricted ROC curve region instead. Note in Equation \@ref(eq:pAUC). We estimated the partial area under to curve that represents TPR and TNR (instead of TPR and FNR) and took integral along the TPR axis. 
 
-$\Rightarrow$ In this paper, we propose to restrict the consideration of the ROC curve to TPR $\ge 2/3$, then estimate the psAUC of the restricted ROC curve region instead. *Our notation of Type I and Type II error follows Beltran (2021) which deviated from previous literature.
-
-\begin{align}
-pAUROC = \int_{\frac{2}{3}}^1 TNR \, d(TPR) = \int_{\frac{2}{3}}^1 specificity \, d(sensitivity)
+\begin{align} (\#eq:pAUC)
+pAUC = \int_{\frac{2}{3}}^1 TNR \, d(TPR) = \int_{\frac{2}{3}}^1 specificity \, d(sensitivity)
 \end{align}
 
-- TNR = 1- FPR
-- FPR = Type I error rate, FNR = Type II error rate
+Because we are limiting our analysis only to the portion of the ROC curve that satisfies TPR $\ge 2/3$, the policy loss function \@ref(eq:policylossold) used in previous literature tends to have a corner solution of optimized thresholds where TPR = 2/3. We propose using an alternative policy loss function that priorities points on the ROC closest to the top left regions where both Type I and II errors are the lowest:
 
-## standardize psAUROC - Detken (2014)
+\begin{align*}
+L_{\theta,\rho}= TypeI(\theta)^2 + TypeII(\theta)^2 = (1 - sensitivity)^2 + (1 - specificity)^2
+\end{align*}
 
-```{r psAUC, echo=FALSE, out.width='70%', fig.align="center"}
+The last step is to standardize the partial AUC value:
+
+```{r psAUCfig, echo=FALSE, out.width='70%', fig.align="center", fig.cap="Standardize partial AUC"}
 knitr::include_graphics('../metadata/pAUC.png')
 ```
 
-\begin{align}
-psAUROC = \frac{1}{2}\left[ 1+ \frac{pAUROC - min}{max - min}\right]
+\begin{align} (\#eq:psAUCeq)
+psAUC = \frac{1}{2}\left[ 1+ \frac{pAUC - min}{max - min}\right]
 \end{align}
 
-# Model selection and averaging
-## Variable selection
-### Comparing performance of individual credit gaps
-Using partial area under the curve (psAUC) values
+The standardization step helps with the comparison of EWI models' performance. Traditional AUC values range from 0 to 1, with 0.5 being the value for a null hypothesis model or an informationless guess. When only estimated partially, the partial AUC value will not retain the same range making it harder to interpret their meaning. Standardizing the partial AUC values restores the ranges of possible values to 0 and 1.
 
-### Test for gaps combination performance
-Using Markov Chain Monte Carlo Model Comparison ($MC^3$) developed by Madigan and York (1995). The method assigns posterior probability for different credit gaps being selected in most likely models/combinations. Babecky (2014) used this $MC^3$ method to identify potential variables in EWI models.
+<!--(Discuss how standardization helps compare the performance of different EWI methods)-->
 
-\begin{align*}
-Model_k :  pre.crisis_{ti} \sim \sum\nolimits_j \beta_j * credit.gap_{tij}
-\end{align*}
-
-### Variable selection
-We selected 29 credit gap measurements based on these 2 criteria.
+In section \@ref(empirical-results), we will discuss the relevance and performance of the psAUC as an EWI metric and the other metrics introduced in this subsection. 
 
 
-## Variable selection (top 23 gaps ranked by psAUC)
+
+## Variable Selection {#modelselection}
+
+Our overall methodology goal is to implement model averaging of top candidate variables. In order to achieve that, we need to select top EWI candidates using the EWI performance criteria discussed in the previous section. We also search for models with combinations of variables that, when combined using positive weights, would have a better model fit than a univariate model would. We aim to select 29 credit gap measurements based on these two criteria.
+
+Firstly, we compared performances of individual credit gaps using partial area under the curve (psAUC) values. Table \@ref(tab:varselect) ranked decomposition filters by psAUC. 
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Load libraries
+library('kableExtra')
+library(dplyr)
+library(knitr)
+options(kableExtra.latex.load_packages = FALSE)
+options(knitr.table.format = "pandoc")
+options(knitr.kable.NA = '')
+```
 
 ```{r varselect, echo=FALSE, warning=FALSE, message=FALSE}
 options(kableExtra.latex.load_packages = FALSE)
@@ -95,9 +166,7 @@ options(knitr.table.format = "pandoc")
 library('kableExtra')
 library(dplyr)
 library(knitr)
-#library(rstudioapi)
-#setwd(dirname(getActiveDocumentContext()$path))
-#getwd()
+options(knitr.kable.NA = '')
 
 filepath='../Data/Output/Modelselection_512.csv'
 df<-read.csv(filepath, sep = ",", header=TRUE)
@@ -109,7 +178,7 @@ name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
 df[,1]<-name1
 
 #df<-df[,-1]
-df<-df[-c(27:nrow(df)),-c(10:ncol(df))]
+df<-df[-c(32:nrow(df)),-c(10:ncol(df))]
 #df<-df[-2,]
 
 #colnames(df) <- c("Median", "10pct", "90pct", "Median", "10pct", "90pct", "Median", "10pct", "90pct")
@@ -120,19 +189,37 @@ df<-df[-c(27:nrow(df)),-c(10:ncol(df))]
 
 #kbl(data.frame(x=rnorm(10), y=rnorm(10), x= rnorm(10)), digits = c(1, 4, 4))
 
-kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace")
-      , row.names = FALSE) %>%
-  kable_paper("striped") %>%
+kbl(df, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "\\addlinespace"), caption ='Top 30 credit gap measurements ranked by psAUC',
+       row.names = FALSE) %>%
+  kable_styling(latex_options=c("striped","scale_down", "HOLD_position")) %>%
+  kable_paper(c("striped")) %>%   
   #add_header_above(c("Parameters" = 1, "VAR2" = 3, "VAR2 1-cross lag" = 3, "VAR2 2-cross lags" = 3)) %>%
   #footnote(general="UK Bayesian regression results") %>%
-  kable_styling(latex_options=c("scale_down","HOLD_position")) %>%
   column_spec(5, bold = TRUE) #%>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
   #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
   #gsub(".centering", "", ., perl = TRUE)
 ```
 
+<!--[Discuss data shown on table]\
+[- estimated and compute values BIC, AIC, AUC, psAUC]\
+[- BIC, AIC : overall fitness of linearized binary logistic regression model]\
+[- AUC: Area Under Curve of receiver operating characteristic (ROC) curve]\
 
-## Variable Selection (MC3)
+[- we then detected the optimized threshold of credit gap that minimize the policy loss function]\
+[- Policy loss function: details here]\
+- [- Deviated from previous loss function in the literature (closest to top left)]\
+- [- Loss function: if not corner solution at TPR = 2/3, discussion would be trivial]\-->
+
+
+Secondly, we test for performances of multivariate models with combinations of different credit gaps.
+
+\begin{align*}
+Model_k :  pre.crisis_{ti} \sim \sum\nolimits_j \beta_j * credit.gap_{tij}
+\end{align*}
+
+We implement our gaps combination model selection using Markov Chain Monte Carlo Model Comparison ($MC^3$) method developed by @madigan_bayesian_1995. The method assigns a posterior probability for different credit gaps being selected in the most likely models/combinations with the lowest BIC values. With 90 variables, there are $2^{90} = 10^{26}$ possible subsets of combinations to choose from.  @babecky_banking_2014 used this $MC^3$ method to identify potential variables in multivariate EWI models. For more efficient search implementation, each variable is given increasing weights depending on their univariate EWI performance. We then estimated the posterior probability of each variable included in the most likely models using 4,000,000 MCMC iterations.
+
+
 \tiny
 ```{r varselectMC3, echo=FALSE, warning=FALSE, message=FALSE}
 options(kableExtra.latex.load_packages = FALSE)
@@ -160,137 +247,144 @@ df<-df[-c(27:nrow(df)),]
 
 #colnames(df) <- c("Median", "10pct", "90pct", "Median", "10pct", "90pct", "Median", "10pct", "90pct")
 
-options(knitr.kable.NA = '')
+
 
 #df = df %>% mutate_if(is.numeric, format, digits=4)
 
 #kbl(data.frame(x=rnorm(10), y=rnorm(10), x= rnorm(10)), digits = c(1, 4, 4))
 
-kbl(df, "latex", booktabs = T, digits = c(4, 4,4,4), escape=TRUE, linesep=c("","", "", "", "\\addlinespace")
-      , row.names = FALSE) %>%
-  #kable_paper("striped") %>%
+kbl(df, "latex", booktabs = T, digits = c(4, 4,4,4), escape=TRUE, linesep=c("","", "", "", "\\addlinespace"), caption = 'Top 25 credit gap measurements ranked by MC3 probability',
+       row.names = FALSE) %>%
+  kable_styling(latex_options=c("striped", "HOLD_position")) %>%
+  kable_paper(c("striped")) %>%
   #add_header_above(c("Parameters" = 1, "VAR2" = 3, "VAR2 1-cross lag" = 3, "VAR2 2-cross lags" = 3)) %>%
-  #footnote(general="UK Bayesian regression results") %>%
-  kable_styling(latex_options=c("HOLD_position")) #%>%
+  footnote(general="Pr(B!=0) is the posterior probability of the variable being selected")
   #column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
   #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
   #gsub(".centering", "", ., perl = TRUE)
 ```
 \normalsize
 
-# Model Averaging
+Using the two results table above, We selected our candidate gaps not only by their psAUC values but also by their other metrics and Type of decomposition methods and features to ensure the robustness of the model averaging method.
 
-# Model averaging
+The 29 selected decomposition filters are reported in Figure \@ref(fig:weightgraph). 29 is also the number of recommended variables to use to start the Model Averaging method in the following subsection.
 
-## Bayesian Model Averging
-The Bayesian Model Average method is formalized in Raftery (1995) to account for model uncertainty.
 
-### Model posterior probability
-equation (33): Model k posterior probability (weight):
-\begin{align}
+## Model averaging {#model-average}
+
+The Bayesian Model Average method is formalized in @raftery_bayesian_1995 to account for model uncertainty and achieve better prediction results in out-of-sample forecasts.
+
+Equation \@ref(eq:posteriorprobweight) represents a Model k's posterior probability or weight in the averaging process:
+\begin{align} (\#eq:posteriorprobweight)
   P(M_k|D) = \frac{P(D|M_k)P(M_k)}{\sum\nolimits_{l=1}^K P(D|M_l)P(M_l)} 
   \approx \frac{exp(-\frac{1}{2}BIC_k)}{\sum\nolimits_{l=1}^K exp(-\frac{1}{2}BIC_l)}
 \end{align}
 
-- Where $P(M_k)$ is model prior probability and can be ignored if all models are assumed equal prior weights. 
+Where $P(M_k)$ is model prior probability and can be ignored if all models are assumed to equal prior weights. $P(D|M_k)$ is marginal likelihood. And $P(D|M_k) \propto exp(-\frac{1}{2}BIC_k)$
 
-- $P(D|M_k)$ is marginal likehood. And $P(D|M_k) \propto exp(-\frac{1}{2}BIC_k)$
+In which: 
+\begin{align} (\#eq:BIC-lik)
+BIC_k = 2log (Bayesfactor_{sk}) = \chi^2_{sk} - df_klog(n)
+\end{align}
 
-- In which $BIC_k = 2log (Bayesfactor_{sk}) = \chi^2_{sk} - df_klog(n)$. s indicates the saturated model.
+The subscript s indicates the saturated model. $\chi^2_{sk}$ is the deviance of model K from the saturated model.  $\chi^2_{sk} = 2(ll(Ms) - ll(Mk))$ . And $ll(Mk)$ is the log-likelihood of model Mk given data D. A model with better fitness will have a higher log-likelihood value, hence smaller deviance and smaller BIC value. 
 
-## Model posterior probability
-- $BIC_k = 2log (Bayesfactor_{sk}) = \chi^2_{sk} - df_klog(n)$
-- $\chi^2_{sk}$ is the deviance of model K from the the saturated model
-  + $\chi^2_{sk} = 2(ll(Ms) - ll(Mk))$
-  + $ll(Mk)$ is the log-likelihood of model Mk given data D
+###  Alternate BIC measurement and three-pass filter.
 
-###  Alternate deviance measurement
-We propose using psAUC instead of log-likelihood in the measurement of deviance. Hence, an alternative BIC value can be estimated at:
+We propose using psAUC in addition to the log-likelihood in the measurement of deviance. Hence, an alternative BIC value can be estimated at:
 
-\begin{align}
+\begin{align} (\#eq:altBIC)
 BIC_{alt,k} &= 2log (Bayesfactor_{alt,sk}) \\
 &= 2(1000*(psAUC_s-psAUC_k)) - df_klog(n)
 \end{align}
-- We scaled the psAUC value by 1000 since $0<psAUC<1$. Also, by design, $psAUC_s=1$.
 
-## Posterior distribution of coefficients of interest:
+We scaled the psAUC value by 1000 since $0<psAUC<1$. Also, by design, the saturated model has $psAUC_s=1$.
 
-$\beta_j$ is the coefficient of credit gap j ($c_j$) in a logistic regression model k against pre-crisis indicator. When considering a particular $\beta_1$ :
+### Final search steps for best models combinations
 
-\begin{align*}
+All of the following search steps described below are done in quasi-real time. As additional quarterly data are added, we will perform the search steps again to find the best possible combinations of models that fit the updated data.
+
+From the set of 29 candidate filter gaps selected in the previous subsection, we add an intercept parameter to make a list of 30 possible variables from which to choose a subset of combinations. The number of possible subsets of combinations is still significantly high at $2^{30} = 10^6$ possible combinations subset, which will cost us computation time and resources. We still need to limit the number of possible subsets further to consider. @furnival_regressions_2000 proposed an algorithm for computing the residual sums of squares for all possible regressions with minimum computing power requirement. With a "leap and bound" technique, the paper found it possible to find the best subsets without examining all possible subsets. This feature reduced the number of operations required to find the best subsets by several orders of magnitude. 
+
+Using the list of reduced subsets using "leap and bound" algorithm, we further filter the number of possible gaps combinations using a method called Occam's razor window described in @raftery_bayesian_1995. The Bayesian Model Average (BMA) R package has an inbuilt function to filter out less likely models using Occam's razor window method. The package also allowed for a multiple-pass filter through a custom function. 
+
+In this variable selection step using Occam's Razor, we will first select the models with BIC values within an Occam's Razor window of the best-fitted model with the lowest BIC value. Secondly, we repeat the same step above but regarding the alternative BIC value derived from psAUC as in Equation \@ref(eq:altBIC).
+
+Lastly, we filter out models with negative weight combinations for model averaging stability. In order to reach feasible results in these three-pass filter steps, we relax the Occam's razor (OC) value from the default value of 20 to 2000, corresponding to a change in the actual search window ( $2*ln(OC)$ ) that searches for models with six times less likelihood value to 15 times.
+
+
+### Posterior distribution of coefficients of interest:
+
+With all possible candidate models of credit gap combinations selected, we can start implementing the model averaging steps. First, we estimate each model k separately, then store their maximum likelihood estimated parameters $\beta_j(k)$ and their standard deviations$. We use the notation $\beta_j(k)$ as the coefficient of credit gap j ($c_j$) in a logistic regression model k against pre-crisis indicator.
+
+We are interested in the averaged estimate of the parameter $\beta_j(K)$ across all models Ks, this is the estimate of the parameter of interest $\beta_j$ in an averaged model. When considering a particular $\beta_1$, the parameter has this probability distribution in a Bayesian averaged model setting.
+
+\begin{align} (\#eq:postprob)
 p(\beta_1|D, \beta_1\ne 0) = \sum\nolimits_{A_1} p(\beta_1|D,M_k)p'(M_k|D)
-\end{align*}
-
-
-- where $p'(M_k|D)=p(M_k|D)/ pr[\beta_1 \ne 0|D]$
-- and $pr[\beta_1 \ne 0|D] = \sum\limits_{A_1} p(M_k|D)$
-  + this is the probability that $\beta_1$ is in the averaged model
-  + $A_1= \{M_k: k=1,...,K; \beta_1 \ne 0\}$, is the set of models that includes $\beta_1$
-
-## Approximation of Bayesian point estimate:
-
-\begin{align}
-\hat{\beta}_1 = E[\beta_1|D, \beta_1\ne 0] = \sum\limits_{A_1} \hat{\beta}_1(k)p'(M_k|D)
 \end{align}
 
-$SD^2[\beta_1|D, \beta_1\ne 0] =[\sum\limits_{A_1}[se_1^2(k)+]+\hat{\beta_1}(k)]p'(M_k|D)
-- E[\beta_1|D, \beta_1\ne 0]^2$
+Where $p'(M_k|D)=p(M_k|D)/ pr[\beta_1 \ne 0|D]$. And $pr[\beta_1 \ne 0|D] = \sum\limits_{A_1} p(M_k|D)$. $p(M_k|D)$ is the posterior probability discussed in Equation \@ref(eq:posteriorprobweight).
 
-- Where $\hat{\beta}_1(k)$ and $se_1^2(k)$ are respectively the MLE and standard error of $\beta_1$ under the model $M_k$. (Leamer 1978, p.118; Raftery 1993a)
+While $pr[\beta_1 \ne 0|D]$ is the probability that $\beta_1$ is in the averaged model; and $A_1= \{M_k: k=1,...,K; \beta_1 \ne 0\}$ is the set of models that includes $\beta_1$.
 
 
-# Weighted credit gap creation
-## Weighted averaged credit gap - motivation
-GLM binomial estimation: 
-\begin{align*}
+### estimation of coefficients of interest:
+
+From Equation \@ref(eq:postprob), an expected value of the parameter of interest $\beta_1$ could be estimated at:
+
+\begin{align}
+\hat{\beta}_1 &= E[\beta_1|D, \beta_1\ne 0] = \sum\limits_{A_1} \hat{\beta}_1(k)p'(M_k|D)
+\\
+SD^2[\beta_1|D, \beta_1\ne 0] &=[\sum\limits_{A_1}[se_1^2(k)+]+\hat{\beta_1}(k)]p'(M_k|D)
+- E[\beta_1|D, \beta_1\ne 0]^2
+\end{align}
+
+
+Where $\hat{\beta}_1(k)$ and $se_1^2(k)$ are respectively the MLE and standard error of $\beta_1$ under the model $M_k$.
+
+So far, we have established averaging estimated parameters using the Bayesian Model Average framework. The response values predicted by the generalized linear model regression can perform better than any individual model in out-of-sample prediction. However, this approach only solves half of the model uncertainty problem. Since we use a multivariate model, deducting an optimized credit gap threshold is still impossible through minimizing the policy loss function. We propose a solution to this issue in the following subsection.
+
+## Weighted credit gap creation {#weighted-gap-creation}
+
+Our motivation to create an averaged weighted gap is to find a solution to the issue of not being able to determine an optimized credit threshold discussed above. Since all credit gap variables measure one set of information: how much in absolute value the total credit series deviated from its long-run trend, we can strategically assign weights to them to create a weighted credit gap.
+
+Our objective is to assign weights to the credit gaps to combine them and create a single credit gap that performs as well as the multivariate Bayesian averaged model in the previous subsection \@ref(model-average). After creating the weighted cycle, we can perform an optimized credit gap threshold analysis, assign a policy loss function value, and compare its EWI performance with other credit gap filters.
+
+Multivariate GLM binary logistic predicted response values: 
+\begin{align} (\#eq:glmpredicteq)
 \widehat{pre.crisis}_{ti} = \widehat{probability}_{ti} = \frac {1}{1+exp(-(a+\sum\nolimits_j \hat{\beta}_j c_{tij}))}
-\end{align*}
+\end{align}
 
-- With $\hat{\beta}_j$ = $E[\beta_j|D, \beta_j\ne 0] = \sum\limits_{A_j} \hat{\beta}_j(k)p'(M_k|D)$
+From the previous subsection \@ref(model-average), in a Bayesian averaged model: $\hat{\beta}_j$ = $E[\beta_j|D, \beta_j\ne 0] = \sum\limits_{A_j} \hat{\beta}_j(k)p'(M_k|D)$. 
 
-
-$\Rightarrow$ We propose a single weighted credit gap $\hat{c}_{ti}$ that satisfies:
+Using the information in Equation \@ref(eq:glmpredicteq), we propose creating a single weighted credit gap $\hat{c}_{ti}$ that satisfies:
 \begin{align*}
 \frac {1}{1+exp(-(a+\hat{\beta} \hat{c}_{ti}))}= \frac {1}{1+exp(-(a+\sum\nolimits_j \hat{\beta}_j c_{tij}))} \\
 \end{align*}
-OR
+Or
 \begin{align}
-\sum\limits_j \hat{\beta}_j c_{tij} = \hat{\beta} \hat{c}_{ti}
+\hat{\beta} \hat{c}_{ti} = \sum\limits_j \hat{\beta}_j c_{tij}
 \end{align}
 
-## Weighted averaged credit gap - creation
-\begin{align*}
-\sum\limits_j \hat{\beta}_j c_{tij} = \hat{\beta} \hat{c}_{ti}
-\end{align*}
-
-We then propose $\hat{\beta} = \sum\nolimits_j \hat{\beta}_j$
+This condition allows us to create a weighted gap $\hat{c}_{ti}$ that will have similar predicted response values and averaged characteristics of the averaged decomposition filters selected. Additionally, to further simplify construction of the weighted gap, we then propose $\hat{\beta} = \sum\nolimits_j \hat{\beta}_j$.
 
 Therefore, 
 
 \begin{align}
-\hat{c}_{ti} = \frac{\sum\nolimits_j (\hat{\beta}_j c_{tij})}{\sum\nolimits_j\hat{\beta}_j} = \sum\nolimits_j w_j c_{tij}
+\hat{c}_{ti} = \frac{\sum\nolimits_j (\hat{\beta}_j c_{tij})}{\hat{\beta}} = \frac{\sum\nolimits_j (\hat{\beta}_j c_{tij})}{\sum\nolimits_j\hat{\beta}_j} = \sum\nolimits_j w_j c_{tij}
 \end{align}
 
-The weight of each candidate credit gap j is $w_j = \frac{\hat{\beta}_j}{\sum\nolimits_j\hat{\beta}_j}$
+The weight of each candidate credit gap j is $w_j = \frac{\hat{\beta}_j}{\sum\nolimits_j\hat{\beta}_j}$, which is the fraction of the estimate of coefficient $\beta_j$ in the averaged model over the sum of the parameters of all selected credit gaps.
 
-## One-sided crisis weighted averaged credit gap
+### One-sided crisis-weighted averaged credit gap
 
-- The weight of each candidate credit gap j is $w_j = \frac{\hat{\beta}_j}{\sum\nolimits_j\hat{\beta}_j}$
+We save the weights $w_j$ at every incremental period $t$ of available data to create a one-sided weight vector $w_{tj}$. In the next section, Figure \@ref(fig:weightgraph) illustrates time series of changes in the weights of credit gaps. We estimate the first 15 years of data available for stable model implementation as a full sample regression and assign the weights as constant during that period.
 
-- We save the weights $w_j$ at every incremental period $t$ of available data to create a one-sided weight vector $w_{tj}$. 
+To create one-sided crisis weighted averaged credit gap for each country $i$ ($\hat{c}_{ti}$), we compute:
 
-$\Rightarrow$ To create one-sided crisis weighted averaged credit gap for each country $i$ ($\hat{c}_{ti}$), we compute:
 \begin{align}
 \hat{c}_{ti,one-sided} = \sum\nolimits_{j} w_{tj} * c_{tij}
 \end{align}
 
-## Weights stacked graph
-Weights are restricted to be positive to ensure stability
-```{r weight, echo=FALSE, out.width='100%', fig.align="center"}
-knitr::include_graphics('../Data/Output/Graphs/Weights_stack.pdf')
-```
+At this point, we have established a framework to create a one-sided crisis weighted averaged credit gap. In the next section, Empirical Results, we will compare the performance as an EWI of this one-sided crisis weighted credit gap (one-sided weighted gap) with other top candidate credit gaps.
 
-## Weights series graph
-```{r weight_series, echo=FALSE, out.width='100%', fig.align="center"}
-knitr::include_graphics('../Data/Output/Graphs/Weights_series.pdf')
-```

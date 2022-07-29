@@ -291,7 +291,7 @@ for (i in 1:length(countrylist_EME)){
 filepath = '../Data/Output/crisis_weightedcycle_fullsample.csv'
 df0 <- read.csv(filepath, header=TRUE, sep=",")
 
-# pAUC table for EME
+# pAUC table for fullsample,EME,AE in loop
 
 countrylist = list(countrylist_full, countrylist_AE, countrylist_EME)
 names(countrylist) <- c("countrylist_full", "countrylist_AE", "countrylist_EME")
@@ -304,7 +304,7 @@ y=df1$crisis
 x=df1[-c(1:3)]
 #dfx<- df1[,-which(names(df)=="date")]
 
-matx=matrix(NA,14,ncol(x))
+matx=matrix(NA,22,ncol(x))
 colnames(matx)<-names(x)
 #matx<-rbind(t(as.matrix(names(x))),matx)
 glm.x <- glm(y ~ 1, family = "binomial")
@@ -350,6 +350,8 @@ for (i in 1:ncol(x)){
 #  ret=c('threshold','fpr','fnr','c'))
 
   coo2<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
+  coo2<-coo2[which(coo2$fnr==min(coo2$fnr)),]
+  
   matx[6:9,i]=as.numeric(coo2[1,c(2:5)])
   dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
   thresh<-matx[6,i]
@@ -383,18 +385,40 @@ for (i in 1:ncol(x)){
   df_ci1$std.ctl = (df_ci1$ctl.high-df_ci1$ctl.low)/3.92
   df_ci1<-df_ci1[,c("threshold", "std.TypeIError", "std.TypeIIError", "std.ctl")]
   minabs<-abs(df_ci1$threshold-thresh)
-  df_ci1<-cbind(df_ci1,minabs)
-  df_ci1<-df_ci1[which(df_ci1$minabs==min(df_ci1$minabs)),]
-  matx[12:14,i]=t(df_ci1[1,2:4])  
+  df_ci2<-df_ci1
+  df_ci2<-cbind(df_ci2,minabs)
+  df_ci2<-df_ci2[which(df_ci2$minabs==min(df_ci2$minabs)),]
+  matx[12:14,i]=t(df_ci2[1,2:4])  
+  
+  
+  
+  coo2<-coo1[which(coo1$fnr==max(coo1$fnr)),]
+  coo2<-coo2[which(coo2$fpr==min(coo2$fpr)),]
+  
+  matx[16:19,i]=as.numeric(coo2[1,c(2:5)])
+  dfy<-as.data.frame(cbind(y,test_prob,x[,i]))
+  thresh<-matx[16,i]
+  minabs<-abs(dfy$test_prob-thresh)
+  dfy<-cbind(dfy,minabs)
+  dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
+  matx[15,i]=dfy[1,3]  
+  
+  minabs<-abs(df_ci1$threshold-thresh)
+  df_ci2<-df_ci1
+  df_ci2<-cbind(df_ci2,minabs)
+  df_ci2<-df_ci2[which(df_ci2$minabs==min(df_ci2$minabs)),]
+  matx[20:22,i]=t(df_ci2[1,2:4])  
 }
 matx<-t(matx)
 matx<-as.data.frame(matx)
 matx<-matx %>% arrange(desc(matx[,4]))
-colnames(matx)<-c("BIC","AIC",
-                "AUC","psAUC","c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function",
-                "Std.AUC","Std.psAUC","Std.Type I","Std.Type II","Std.Loss Function")
+colnames(matx)<-c("BIC","AIC","AUC","psAUC",
+                "c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function",
+                "Std.AUC","Std.psAUC","Std.Type I","Std.Type II","Std.Loss Function",
+                "c.Threshold","r.Threshold","Type I","Type II","Policy Loss Function",
+                "Std.Type I","Std.Type II","Std.Loss Function")
 matx<-matx[,-which(names(matx)=="r.Threshold")]
-matx<-rbind(c(0,0,roc0,proc0,c.thresh0,t10,t20,dis0, 0, 0, 0, 0, 0),matx)
+matx<-rbind(c(0,0,roc0,proc0,c.thresh0,t10,t20,dis0, 0, 0, 0, 0, 0,c.thresh0,t10,t20,dis0, 0, 0, 0),matx)
 rownames(matx)[1]<-"null"
 matx<-cbind(as.matrix(rownames(matx)),matx)
 colnames(matx)[1]<-"Cycles"
@@ -420,45 +444,19 @@ library(MLeval)
 library(rsample)
 library(purrr)
 library(tidyverse)
+library(tibble)
 
 #Code for k-fold cross validation
 
 for (j in 1:length(countrylist)){
 df1 <-df0[grepl(paste(countrylist[[j]], collapse="|"), df0$ID),]
-  
+matx=matrix(NA,24,ncol(x))
+colnames(matx)<-names(x)
+
 df1<-na.omit(df1)
-y=df1$crisis
-x=df1[-c(1:3)]
+x=df1[,-c(1:3)]
 #dfx<- df1[,-which(names(df)=="date")]
 
-
-
-matx=matrix(NA,12,ncol(x))
-colnames(matx)<-names(x)
-#matx<-rbind(t(as.matrix(names(x))),matx)
-glm.x <- glm(y ~ 1, family = "binomial")
-test_prob = predict(glm.x, type = "response")
-test_roc = roc(y ~ test_prob, plot = FALSE, print.auc = FALSE, levels = c(0,1)
-               , direction = "<")
-roc0=as.numeric(test_roc$auc)
-c.thresh0<-NA
-coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
-coo1<-subset(coo1,coo1$sensitivity>=2/3)
-coo1<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
-threshold0<-coo1$threshold
-t10<-coo1$fpr
-t20<-coo1$fnr
-dis0<-coo1$closest.topleft
-proc0=auc(test_roc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
-
-
-for (i in 1:ncol(x)){
-#y=df1$crisis
-df2=df1[,-c(1:2)]
-#df2<-df1
-
-df2$selectedCycle <-  df2[,i+1]
-#df2$ID <- as.factor(df2$ID)
 cvfun2 <- function(split, ...){
   mod <- glm(crisis ~ selectedCycle,  data=analysis(split), family="binomial")
   fit <- predict(mod, newdata=assessment(split), type="response")
@@ -468,15 +466,15 @@ cvfun2 <- function(split, ...){
   )
 }
 
-
 aucfunc <- function(y, fit, x, ...){
   matx=matrix(NA,14,1)
+  mod =glm(y ~ fit, family="binomial")
   test_roc = roc(y ~ fit, plot = FALSE, print.auc = FALSE, levels = c(0,1), direction = "<", ci=FALSE) 
   test_proc = roc(y ~ fit, plot = FALSE, print.auc = FALSE, levels = c(0,1)
                  , direction = "<", ci=FALSE,
                  partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
-  matx[1]=0
-  matx[2]=0
+  matx[1]=BIC(mod)
+  matx[2]=AIC(mod)
   
   matx[3]=as.numeric(test_roc$auc)
   matx[4]=auc(test_proc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
@@ -485,6 +483,8 @@ aucfunc <- function(y, fit, x, ...){
   coo1<-subset(coo1,coo1$sensitivity>=2/3)
   
   coo2<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
+  coo2<-coo2[which(coo2$fnr==min(coo2$fnr)),]
+
   matx[6:9]=as.numeric(coo2[1,c(2:5)])
   dfy<-as.data.frame(cbind(y,fit,x))
   thresh<-matx[6]
@@ -493,31 +493,127 @@ aucfunc <- function(y, fit, x, ...){
   dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
   matx[5]=dfy[1,3]  
   
-  df<-data.frame(AUC=matx[3], pAUC=matx[4], c.Thres=matx[5],  
-  TypeI=matx[7], TypeII=matx[8], Loss=matx[9])
+  
+  coo2<-coo1[which(coo1$fnr==max(coo1$fnr)),]
+  coo2<-coo2[which(coo2$fpr==min(coo2$fpr)),]
+
+  matx[11:14]=as.numeric(coo2[1,c(2:5)])
+  dfy<-as.data.frame(cbind(y,fit,x))
+  thresh<-matx[11]
+  minabs<-abs(dfy$fit-thresh)
+  dfy<-cbind(dfy,minabs)
+  dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
+  matx[10]=dfy[1,3]  
+  
+  df<-data.frame(BIC=matx[1],AIC=matx[2],AUC=matx[3], pAUC=matx[4], 
+      c.Thres=matx[5], TypeI=matx[7], TypeII=matx[8], Loss=matx[9], 
+      c.Thres1=matx[10], TypeI1=matx[12], TypeII1=matx[13], Loss1=matx[14])
   return(df)
 }
 
+cvfun0 <- function(split, ...){
+  mod <- glm(crisis ~ 1,  data=analysis(split), family="binomial")
+  fit <- predict(mod, newdata=assessment(split), type="response")
+  data.frame(fit = fit, 
+             y = model.response(model.frame(formula(mod), data=assessment(split))))
+}
+
+
+aucfunc0 <- function(y, fit, ...){
+  matx=matrix(NA,14,1)
+  mod =glm(y ~ fit, family="binomial")
+  test_roc = roc(y ~ fit, plot = FALSE, print.auc = FALSE, levels = c(0,1), direction = "<", ci=FALSE) 
+  test_proc = roc(y ~ fit, plot = FALSE, print.auc = FALSE, levels = c(0,1)
+                  , direction = "<", ci=FALSE,
+                  partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
+  matx[1]=BIC(mod)
+  matx[2]=AIC(mod)
+  
+  matx[3]=as.numeric(test_roc$auc)
+  matx[4]=auc(test_proc, partial.auc=c(1, 2/3), partial.auc.focus="se", partial.auc.correct=TRUE, allow.invalid.partial.auc.correct=TRUE)
+  
+  coo1=coords(test_roc,ret=c('se','threshold','fpr','fnr','c'))
+  coo1<-subset(coo1,coo1$sensitivity>=2/3)
+  
+  coo2<-coo1[which(coo1$closest.topleft==min(coo1$closest.topleft)),]
+  coo2<-coo2[which(coo2$fnr==min(coo2$fnr)),]
+  
+  matx[6:9]=as.numeric(coo2[1,c(2:5)])
+  # dfy<-as.data.frame(cbind(y,fit))
+  # thresh<-matx[6]
+  # minabs<-abs(dfy$fit-thresh)
+  # dfy<-cbind(dfy,minabs)
+  # dfy<-dfy[which(dfy$minabs==min(dfy$minabs)),]
+  matx[5]=NA
+  
+  
+  coo2<-coo1[which(coo1$fnr==max(coo1$fnr)),]
+  coo2<-coo2[which(coo2$fpr==min(coo2$fpr)),]
+  
+  matx[11:14]=as.numeric(coo2[1,c(2:5)])
+  matx[10]=NA
+  
+  df<-data.frame(BIC=matx[1],AIC=matx[2],AUC=matx[3], pAUC=matx[4], 
+                 c.Thres=matx[5], TypeI=matx[7], TypeII=matx[8], Loss=matx[9], 
+                 c.Thres1=matx[10], TypeI1=matx[12], TypeII1=matx[13], Loss1=matx[14])
+  return(df)
+}
+
+
+for (i in 1:ncol(x)){
+df2=df1[,-c(1:2)]
+
+df2$selectedCycle <-  df2[,i+1]
 
 cv_out <- vfold_cv(data=df2, v=3, repeats = 10) %>% 
     mutate(fit = map(splits, cvfun2)) %>% 
     unnest(fit) %>% 
     group_by(id) %>%
-    summarise(aucfunc(y,fit, x)) %>%
+    summarise(aucfunc(y,fit,x)) %>%
     as.data.frame()
 
 cv_out <- cv_out[,-c(1)]
-matx[1:6,i] = apply(cv_out, 2, mean)
-matx[7:12,i] = apply(cv_out, 2, sd)
+matx[1:12,i] = apply(cv_out, 2, mean)
+matx[13:24,i] = apply(cv_out, 2, sd)
 }
 matx<-t(matx)
 matx<-as.data.frame(matx)
-matx<-matx %>% arrange(desc(matx[,2]))
-colnames(matx)<-c("AUC","psAUC","c.Threshold","Type I","Type II","Policy Loss Function",
-                "Std.AUC","Std.psAUC","std.cThreshold","Std.Type I","Std.Type II","Std.Loss Function")
-#matx<-matx[,-which(names(matx)=="r.Threshold")]
-matx<-rbind(c(roc0,proc0,c.thresh0,t10,t20,dis0, 0, 0, 0, 0, 0, 0),matx)
-rownames(matx)[1]<-"null"
+matx<-matx %>% arrange(desc(matx[,4]))
+
+colnames1<-c("BIC","AIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function",
+                "c.Threshold1","Type I1","Type II1","Policy Loss Function1",
+                "Std.BIC","Std.AIC","Std.AUC","Std.psAUC",
+                "std.cThreshold","Std.Type I","Std.Type II","Std.Loss Function",
+                "std.cThreshold1","Std.Type I1","Std.Type II1","Std.Loss Function1")
+colnames(matx) <- colnames1
+df2=df1[,-c(1:2)]
+
+cv_out <- vfold_cv(data=df2, v=3, repeats = 10) %>% 
+  mutate(fit = map(splits, cvfun0)) %>% 
+  unnest(fit) %>% 
+  group_by(id) %>%
+  summarise(aucfunc0(y,fit)) %>%
+  as.data.frame()
+
+matx0=as.data.frame(matrix(NA,24,1))
+cv_out <- cv_out[,-c(1)]
+matx0[1:12,1] = apply(cv_out, 2, mean)
+matx0[13:24,1] = apply(cv_out, 2, sd)
+matx0<-t(matx0)
+colnames(matx0) <- colnames1
+
+matx<-as.data.frame(matx)
+matx<-rbind(matx0,matx)
+rownames(matx)[1]<-"c.null"
+
+demeanBIC <- function(x) (x - matx0[1,1])
+demeanAIC <- function(x) (x - matx0[1,2])
+
+matx<- matx %>%
+  mutate_at(c("BIC"), demeanBIC) %>%
+  mutate_at(c("AIC"), demeanAIC)
+
 matx<-cbind(as.matrix(rownames(matx)),matx)
 colnames(matx)[1]<-"Cycles"
 matx[["Cycles"]][which(matx$Cycles=="weightedcycle")]="1_sided weighted_cycle"
@@ -528,11 +624,154 @@ write.table(matx, filepath, sep=',', row.names=FALSE, col.names=TRUE)
 
 
 
+## Code for result table
+### Bootstrap results
+
+
+filepath='../Data/Output/Modelcomparison_512_weighted_countrylist_full.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(15:ncol(df))]
+df2<- as.data.frame(matrix(NA,2*nrow(df),9))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:9)]<-df[i,c(1:9)]
+  df2[2*(i-1)+2,c(4,5,7,8,9)]<-df[i,c(10:14)]
+}
+
+colnames(df2)<-c("Cycle","BIC","AIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+
+library(kableExtra)
+kbl(df2, digits = rep(4,ncol(df2)), row.names=FALSE) %>%
+  kable_paper("striped") %>%
+  footnote(general="Cross countries") %>%
+  kable_styling(latex_options="scale_down")
+  #add_header_above(c(" " = 1, "$\\phi^{x1}_y$" = 2, "$\\phi^{x1}_h$" = 2)) %>%
+
+
+
+### K-fold cross validation results
+
+
+filepath='../Data/Output/CV_Modelcomparison_512_weighted_countrylist_full.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(3,10:13,15,22:25)]
+df2<- as.data.frame(matrix(NA,2*nrow(df),8))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:8)]<-df[i,c(1:8)]
+  df2[2*(i-1)+2,c(2:8)]<-df[i,c(9:15)]
+}
+
+colnames(df2)<-c("Cycle","BIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+df2[ df2 == "(0.0000)" ] <- NA
+
+library(kableExtra)
+kbl(df2, digits = rep(4,ncol(df2)), row.names=FALSE) %>%
+  kable_paper("striped") %>%
+  footnote(general="Cross countries") %>%
+  kable_styling(latex_options="scale_down")
+  #add_header_above(c(" " = 1, "$\\phi^{x1}_y$" = 2, "$\\phi^{x1}_h$" = 2)) %>%
 
 
 
 
+## Out of sample forecast
+### Full sample
 
+```{r cv-varcompfull, echo=FALSE, warning=FALSE, message=FALSE}
+# options(kableExtra.latex.load_packages = FALSE)
+# options(knitr.table.format = "pandoc")
+# library('kableExtra')
+# library(dplyr)
+# library(knitr)
+
+filepath='../Data/Output/CV_Modelcomparison_512_weighted_countrylist_full.csv'
+df<-read.csv(filepath, sep = ",", header=TRUE)
+
+name1<- df[,1]
+name1<- gsub("_", ".", name1)
+name1[which(name1=="c.hp400k")]<-"BIS Basel gap"
+df[,1]<-name1
+
+df<-df[,-c(3,10:13,15,22:25)]
+df2<- as.data.frame(matrix(NA,2*nrow(df),8))
+for (i in 1:nrow(df)){
+  df2[2*(i-1)+1,c(1:8)]<-df[i,c(1:8)]
+  df2[2*(i-1)+2,c(2:8)]<-df[i,c(9:15)]
+}
+
+colnames(df2)<-c("Cycle","BIC","AUC","psAUC",
+                "c.Threshold","Type I","Type II","Policy Loss Function")
+
+
+f <- function(x){ sprintf('%.4f',x)}
+fs <- function(x){ sprintf("(%s)",x)}
+
+
+df2[,-1]<- data.frame(lapply(df2[,-1], f))
+
+for (i in 1:nrow(df)){
+df2[2*(i-1)+2,] <- df2[2*(i-1)+2,] %>% 
+   lapply(. , fs) %>% data.frame()
+}
+
+df2[ df2 == "(NA)" ] <- NA
+df2[ df2 == "(0.0000)" ] <- NA
+
+options(knitr.kable.NA = '')
+
+kbl(df2, "latex", booktabs = T, digits = c(4, 4, 4, 4, 4, 4, 4, 4, 4), escape=FALSE, linesep=c("","", "", "", "", "\\addlinespace")
+      , row.names = FALSE) %>%
+  #add_header_above(c("Parameters" = 1, "VAR2" = 3)) %>%
+  #footnote(general="") %>%
+  kable_styling(latex_options=c("striped","scale_down", "HOLD_position")) %>%
+	kable_paper(c("striped")) %>%		
+  column_spec(5, bold = TRUE) %>% #c(0,0,1,0,0,0,1,0,0,0,0,0,0,0,0))
+  row_spec(c(which(df2$Cycle=="1.sided weighted.cycle"),which(df2$Cycle=="BIS Basel gap")),  bold=TRUE)#%>%
+  #gsub(".(begin|end){table.*}", "", ., perl = TRUE)%>%
+  #gsub(".centering", "", ., perl = TRUE)
+```
 
 
 
@@ -901,3 +1140,61 @@ ggsave("../Data/Output/Graphs/Weighted_credit_gap_UK.pdf", width=8, height=5)
 #     labs(x = NULL, y = NULL,
 #        title = sprintf("Credit gap and systemic crisis: US"))
 # ggsave("../Data/Output/Graphs/Weighted_credit_gap_US.pdf", width=8, height=5)
+
+filepath='../Data/Output/crisis_weightedcycle_fullsample.csv'
+df0<-read.csv(filepath, sep = ",", header=TRUE)
+df0$date<- as.Date(df0$date)
+enddatadate = as.Date("2017-10-01")
+
+### Loop for graphs of credit gap and systemic crisis for each country
+for (i in 1:length(countrylist_AE)) {  
+df<-df0 %>%
+  subset(ID==countrylist_AE[[i]])
+df<-df[,c("date","c.hp400k","weightedcycle")]
+names(df)<-c("date","BIS Basel Gap", "weighted gap")
+df1<-melt(df,id.vars=c("date"))
+  country = countrylist_AE[[i]]
+  rects <- data.frame(ystart = c(enddatadate), yend = c(max(df1$date)), periods = c("End-of-crisis-data"))
+  fillss = c("black")
+  p<-ggplot() +
+    geom_rect(data = rects, aes(ymin = -Inf, ymax = Inf, xmin = ystart, xmax = yend, fill=periods), alpha = 0.3) +
+    scale_fill_manual(values=fillss)+
+    geom_line(data=df1, aes(x=date, y=value, color=variable))+
+    coord_cartesian(ylim = c(min(df1$value), max(df1$value))) +
+    theme(legend.position = "bottom") +
+    theme_light() +
+    theme(panel.grid = element_blank()) +
+    geom_hline(aes(yintercept= 3, linetype = "optimized threshold  = 3.00"), colour= 'blue') +
+        scale_linetype_manual(name = "threshold", values = c(2),
+                        guide = guide_legend(override.aes = list(color = c("blue"))))+
+  labs(x = NULL, y = NULL,
+       title = sprintf("Credit gap and systemic crisis: %s",country))
+ggsave(sprintf("../Data/Output/Graphs/All/Weighted_credit_gap_%s.pdf",country), width=8, height=5)
+}
+
+
+### Loop for graphs of credit gap and systemic crisis for EME countries
+for (i in 1:length(countrylist_EME)) {  
+  df<-df0 %>%
+    subset(ID==countrylist_EME[[i]])
+  df<-df[,c("date","c.hp400k","weightedcycle", "c.bn3_r15")]
+  names(df)<-c("date","BIS Basel Gap", "weighted gap", "Beveridge-Nelson gap")
+  df1<-melt(df,id.vars=c("date"))
+  country = countrylist_EME[[i]]
+  rects <- data.frame(ystart = c(enddatadate), yend = c(max(df1$date)), periods = c("End-of-crisis-data"))
+  fillss = c("black")
+  p<-ggplot() +
+    geom_rect(data = rects, aes(ymin = -Inf, ymax = Inf, xmin = ystart, xmax = yend, fill=periods), alpha = 0.3) +
+    scale_fill_manual(values=fillss)+
+    geom_line(data=df1, aes(x=date, y=value, color=variable))+
+    coord_cartesian(ylim = c(min(df1$value), max(df1$value))) +
+    theme(legend.position = "bottom") +
+    theme_light() +
+    theme(panel.grid = element_blank()) +
+    geom_hline(aes(yintercept= 3, linetype = "optimized threshold  = 3.00"), colour= 'blue') +
+    scale_linetype_manual(name = "threshold", values = c(2),
+                          guide = guide_legend(override.aes = list(color = c("blue"))))+
+    labs(x = NULL, y = NULL,
+         title = sprintf("Credit gap and systemic crisis: %s",country))
+  ggsave(sprintf("../Data/Output/Graphs/All/Weighted_credit_gap_%s.pdf",country), width=8, height=5)
+}

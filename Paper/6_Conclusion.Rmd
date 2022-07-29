@@ -1,5 +1,15 @@
+
 # Conclusion
 
-<!-- Our study is based on the idea that house prices and credit are jointly determined and they affect each other both in the short-run and in the long-run. We decompose the movements of the two variables of interest into a permanent and transitory component. The correlations among the cyclical components support the idea that the rise of household credit is associated with an increase in house prices above it long-run trend. Our multivariate model captures the dynamics features of the household credit and house prices series and performs better than univariate benchmarks in capturing the boom and bust during the last two decades. Additionally, employing cross correlation effects on the transitory components of the two series allows me to test the predictive ability of the cyclical components and found evidence to support that a household credit gap can positively predict a house prices gap. These findings suggests macroprudential policy implications since house prices are increasingly becoming a more important topic. -->
+Our study is based on the idea that excessive credit growth measured by the total credit to GDP deviations could be used as an early warning indicator for future systemic financial crises. We build a novel framework to select relevant credit gap decomposition filters, average their combinations, and create a crisis-weighted credit gap that inherits the combined features of the selected filters. We also proposed a novel performance metric for early warning indicator psAUC with a specific constraint that has appealing policy implication properties. 
 
-<!-- Further development for this paper should include studying on policy implications of credit and house price gaps with high magnitudes, introducing more robust optimal constraints on parameters to ensure stability and model robustness rather than an ad-hoc approach of selecting weights. Additional examination of the multicollinearity and identification issues also need to be addressed. -->
+Our findings in this paper provide robust evidence to show the superior predictive performance of our proposed weighted credit gap over other univariate early warning indicator models that use individual credit gap filters. The novel proposed metric psAUC also showed that it has appealing properties for policy maker. It simplifies the steps to search for a decomposition filter with minimized loss function in the range of credit gap thresholds with Type II error rates smaller than 1/3. Therefore, the weighted gap and novel metric can be regarded as useful additional reference points for policy implications.
+
+\clearpage
+
+
+<!--(References for closing: one of the 6 reference papers)
+We have created a system ... (Alessi 2017)
+summarize opening assumptions, findings, contributions
+Policy implication, reference
+Future improvement-->

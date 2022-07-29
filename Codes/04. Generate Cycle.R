@@ -213,8 +213,6 @@ write.table(weightedcycles_mat, filepath, sep=',' , row.names = TRUE)
 
 
 
-
-
 #filepath = '../Data/Output/weight_mat_fullsample.csv'
 #weightedcycle_mat2 <- read.csv(filepath, header=TRUE, sep=",")
   
